@@ -2,56 +2,89 @@
 
 ## Default position
 
-Do not collect or store personal visitor data.
+Do not collect personal information.
 
-## Do not collect
+For MVP 0.2:
 
-- names;
-- phone numbers;
-- email addresses;
-- login credentials;
-- photos or video;
-- audio recordings;
-- precise device identifiers;
-- open-ended personal stories.
+- no login;
+- no app install;
+- no names;
+- no email addresses;
+- no phone numbers;
+- no open visitor free text;
+- no visitor audio;
+- no visitor video;
+- no persistent visitor profiles.
 
-## Visitor phone sessions
+## What may be stored in memory
 
-Use anonymous, temporary session IDs only if needed for rate limiting. Clear them regularly.
+MVP 0.2 may keep transient in-memory state:
 
-Do not persist session IDs after reset or shutdown unless explicitly approved and documented.
+- mission id;
+- round id;
+- current phase;
+- vote counts;
+- deterministic proposal id;
+- validation check labels;
+- current mode: live/fallback/replay.
+
+This should clear on reset or server restart.
 
 ## Logs
 
-Keep logs technical:
+Logs should be technical and non-identifying.
 
-- route started;
-- vote count;
-- mission selected;
-- model timeout;
-- fallback triggered;
-- validation failure category.
+Allowed examples:
 
-Avoid storing raw visitor text. Public MVP should not use visitor free text.
+```text
+phase changed: vote_rule -> proposal
+mission selected: game-studio
+vote accepted: phase=vote_goal option=escape_reef_lab
+fallback enabled
+```
 
-## QR signage
+Avoid logging:
 
-Suggested sign:
+- IP addresses unless required for debugging and removed before public use;
+- device identifiers;
+- user agent strings unless required temporarily for cross-device debugging;
+- raw visitor text;
+- any personal details.
 
-> Scan the QR code to help control the shared demo. No login is required. Please do not enter personal information.
+## Phone sessions
 
-## Staff response to privacy questions
+For MVP 0.2, a simple anonymous browser session is acceptable if needed for duplicate-vote limiting.
 
-Use:
+Keep it non-identifying:
 
-> This demo is designed to use anonymous button taps only. It does not need your name, email, phone number, login, audio, or video. Staff can reset and clear the session.
+- random session token;
+- no account;
+- no name;
+- no long-term persistence.
 
-## Shutdown data clearing
+Duplicate-vote limiting is optional for MVP 0.2.
 
-At shutdown:
+## Staff route
 
-- stop local services;
-- clear temporary vote/session state;
-- remove temporary logs if they include visitor input;
-- confirm no audio/video recordings were saved;
-- collect QR signage.
+Do not expose `/staff` as a visitor-facing QR target.
+
+For local rehearsal, staff route may be protected by physical/network controls. Before public deployment, decide whether a simple PIN or local-only restriction is needed.
+
+## Reset requirements
+
+Reset must clear:
+
+- current votes;
+- chosen goal/rule;
+- proposal;
+- checks;
+- crowd decision;
+- public result text if inappropriate or stale.
+
+## Public sign text
+
+Suggested QR sign:
+
+> Scan to control the shared demo. No login is required. Please do not enter personal information.
+
+Since MVP 0.2 has no free text, this should be easy to satisfy.

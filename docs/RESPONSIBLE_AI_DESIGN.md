@@ -4,11 +4,17 @@
 
 The SLM proposes. The system decides. Humans remain in control.
 
+## MVP 0.2 position
+
+MVP 0.2 should not use a live AI model. It uses deterministic local-AI-style proposals to test the human-in-the-loop interaction, screen language, checks, reset, and fallback.
+
+This is deliberate. Do not add live SLM behaviour until the no-AI loop is reliable.
+
 ## Why this matters
 
 Human-AI collaboration is not automatically better than either humans or AI alone. The strongest evidence is more favourable for creative/content tasks than decision tasks, so this demo uses bounded creative missions and human feedback rather than truth-by-majority decision-making.
 
-Local SLMs can reduce latency, cost, and privacy risks, but they are still limited. They can drift from the goal, make unsupported claims, return malformed output, or overhelp.
+Local SLMs can reduce latency, cost, and privacy risks, but they are still limited. They can drift from the goal, make unsupported claims, return malformed output, overhelp, or sound more confident than warranted.
 
 ## Public claim to make
 
@@ -26,9 +32,9 @@ That is too broad and not always supported by evidence.
 
 | Layer | Purpose |
 |---|---|
-| Constrained UI | Prevent unsafe or messy input before it reaches the model |
+| Constrained UI | Prevent unsafe or messy input before it reaches the proposal layer |
 | Mission state | Keep clear goals, rules, and allowed actions |
-| Structured output | Make model proposals machine-checkable |
+| Structured output | Make proposals machine-checkable |
 | Validators | Enforce intent, schema, rule, evidence, and safety checks |
 | Human feedback | Let visitors and staff accept, repair, or reject |
 | Fallback | Keep the public demo running safely |
@@ -42,7 +48,7 @@ Did the proposal follow the winning crowd choice?
 
 ### Schema check
 
-Did the proposal match required JSON fields and enums?
+Did the proposal match required fields and enums?
 
 ### Rule check
 
@@ -59,6 +65,7 @@ Is the output suitable for a public Open Day booth?
 ## Approved check labels
 
 - `pass`
+- `partial`
 - `warn`
 - `fail`
 - `not_required`
@@ -67,17 +74,17 @@ Is the output suitable for a public Open Day booth?
 
 ## Safe visible failure
 
-The demo should include safe model failures because they teach the point.
+The demo should include safe model-like failures because they teach the point.
 
 Examples:
 
-- the AI gives away a game puzzle answer;
-- the AI invents an event detail;
-- the AI overclaims a career path;
-- the AI blocks harmless chat feedback;
-- the AI suggests a reef action that breaks the rule.
+- the proposal gives away a game puzzle answer;
+- the proposal invents an event detail;
+- the proposal overclaims a career path;
+- the proposal blocks harmless chat feedback;
+- the proposal suggests a reef action that breaks the rule.
 
-These should be canned or controlled examples, not uncontrolled failures.
+These should be canned or controlled examples in MVP 0.2, not uncontrolled failures.
 
 ## Factual claims
 
@@ -118,6 +125,12 @@ Use:
 - “The AI is generating a likely continuation, not necessarily a correct answer.”
 - “This mode is experimental, so we also have a reliable fallback.”
 - “People set the goal, the local AI proposes, and software checks before the result is used.”
+
+For MVP 0.2, use internally:
+
+- “deterministic proposal”;
+- “prepared local-AI-style proposal”;
+- “simulated proposal.”
 
 Avoid:
 

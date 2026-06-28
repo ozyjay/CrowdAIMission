@@ -8,6 +8,24 @@ The demo shows that a local small language model can be useful, fast, private/of
 
 The AI is one component in a public interactive system. The crowd and staff remain in control.
 
+## Current implementation phase
+
+**MVP 0.2 — Real Round Loop**
+
+MVP 0.1 is already proven at smoke-test level: a mobile phone could connect to the local app running on a Mac.
+
+MVP 0.2 must add a real, no-AI round loop:
+
+1. visitor vote on goal;
+2. visitor vote on rule;
+3. deterministic local-AI-style proposal;
+4. visible software checks;
+5. crowd decision vote;
+6. screen update;
+7. staff reset/fallback.
+
+Do **not** add live SLM calls in MVP 0.2.
+
 ## Non-negotiable public-demo rules
 
 - Do not collect names, phone numbers, emails, logins, or identifiable visitor data.
@@ -19,21 +37,22 @@ The AI is one component in a public interactive system. The crowd and staff rema
 - Every live mode needs a replay/fallback mode.
 - Every mission needs reset, clear session, and safe fallback paths.
 - Staff must be able to operate the demo without developer-only terminal knowledge.
+- A model-like proposal in MVP 0.2 is deterministic. Do not imply it is live AI in public copy unless live AI is actually enabled and labelled correctly.
 
-## Build priorities
+## MVP 0.2 build priorities
 
 Build in this order:
 
-1. Static mission screens and `/screen`, `/`, `/staff` routes.
-2. QR phone-to-screen proof of concept with no AI dependency.
-3. Voting round state machine.
-4. Deterministic mission renderer and canned responses.
-5. Validation pipeline: intent, schema, rule, evidence, safety.
-6. Local SLM proposal layer with timeout and fallback.
-7. Staff controls, replay mode, health checks, and smoke tests.
-8. Polish, kiosk mode, and rehearsal hardening.
+1. Route stability for `/`, `/screen`, `/staff`, `/replay`, `/health`, `/api/state`, `/api/missions`, and `/api/vote`.
+2. Server-owned round state machine.
+3. WebSocket or polling updates to `/screen` and `/staff`.
+4. Staff controls: select mission, reset, clear votes, force fallback/replay.
+5. Deterministic mission definitions for Game Studio, Deepfake Detective, and Future Me Quest.
+6. Deterministic proposal generator and validation checks.
+7. Smoke tests and one-phone LAN test.
+8. Documentation update with actual launch/test results.
 
-Do not add live AI generation before the no-AI deterministic version works.
+Only after MVP 0.2 is stable should the project add a local SLM adapter.
 
 ## Required routes
 
@@ -42,11 +61,12 @@ Minimum routes:
 - `/` — visitor phone controller.
 - `/screen` — big-screen display.
 - `/staff` — staff controls.
-- `/api/vote` — submit vote.
-- `/ws` — live updates.
-- `/health` — service health.
 - `/replay` — fallback/replay screen.
-- `/qr.svg` — QR code for joining the visitor phone controller.
+- `/health` — service health.
+- `/api/state` — current round/session state.
+- `/api/missions` — enabled mission metadata.
+- `/api/vote` — submit tap-based vote.
+- `/ws` — live state updates if using WebSockets.
 
 ## Ports
 
@@ -60,79 +80,97 @@ Use fixed ports.
 
 Do not silently fall back to random ports in Open Day mode.
 
-For same-Wi-Fi phone testing, start the single-app MVP with `APP_HOST=0.0.0.0 ./scripts/start_dev.sh` and use the printed `Phone URL` or the QR code shown on `/screen` and `/staff`. Open `/screen` by LAN URL for booth use so `/qr.svg` resolves to a phone-reachable host. Do not tell visitors or staff to use `127.0.0.1` from a phone.
-
-PowerShell equivalents must be kept in sync with Bash scripts: `scripts/check_ports.ps1`, `scripts/start_dev.ps1`, and `scripts/smoke_test.ps1`.
-
 ## Architecture rules
 
-- The local SLM may propose content but must not directly control state, routes, files, network, or public output.
-- Canonical state must be ordinary software data.
-- All model output must be schema-validated before use.
+- Canonical state must be owned by the server, not the browser.
+- Visitor clients submit votes only; they do not authoritatively set mission state.
+- The local SLM, when added later, may propose content but must not directly control state, routes, files, network, or public output.
+- All proposal output must pass through the same validation pipeline, even if deterministic.
 - Unknown actions, unknown assets, unsupported factual claims, malformed JSON, slow model calls, and unsafe text must fall back to deterministic content.
-- A failed check should be visible as an external control state, not hidden as “AI reasoning.”
+- Failed checks should be visible as external control state, not hidden as “AI reasoning.”
+
+## MVP 0.2 state-machine expectations
+
+Use a small explicit phase enum, for example:
+
+```text
+idle
+vote_goal
+vote_rule
+proposal
+checks
+crowd_decision
+result
+fallback
+replay
+```
+
+Every phase should have:
+
+- a visible screen state;
+- a visitor-phone state;
+- a staff-control state;
+- a reset path.
 
 ## Mission design rules
 
 Each mission must define:
 
+- mission id;
 - mission title;
 - public hook;
 - audience pull;
 - allowed goals;
 - allowed rules;
-- allowed actions;
+- allowed crowd decisions;
+- deterministic proposal examples;
+- check outcomes;
 - safe failure examples;
 - fallback response;
 - staff script;
 - test cases.
 
-Current mission deck:
+MVP 0.2 missions:
 
 1. Game Studio Mission.
 2. Deepfake Detective / Truth Check.
 3. Future Me Quest.
-4. Study Coach: Help or Shortcut?
-5. Reef Rescue Mission.
-6. Squad Chat Moderator.
 
 ## Coding conventions
 
 - Keep code simple and inspectable.
 - Prefer boring, reliable dependencies.
-- Prefer server-owned state over client-owned authority.
+- Prefer explicit state transitions over clever implicit behaviour.
 - Use environment variables for ports and hosts.
-- Use `PYTHON_BIN` when needed to avoid accidentally running Xcode/system Python instead of the active pyenv Python.
-- Include tests for every new mission and every new model-output schema.
+- Include tests for every new mission and state transition.
 - Add or update docs when behaviour changes.
 - Avoid large rewrites unless explicitly requested.
 
 ## Test expectations
 
-Before marking a phase complete:
+Before marking MVP 0.2 complete:
 
 - run port checks;
-- run unit tests;
+- run unit tests if present;
 - run smoke tests;
-- when scripts change, verify both Bash and PowerShell variants where possible;
-- confirm same-Wi-Fi phone mode starts with `APP_HOST=0.0.0.0` and prints a LAN `Phone URL`;
-- confirm `/qr.svg` works and the QR shown on `/screen` opens the visitor controller from a phone;
 - confirm reset works;
-- confirm fallback works;
+- confirm fallback/replay works;
 - confirm visitor data can be cleared;
-- confirm app starts on the assigned port;
-- confirm `/screen`, `/`, `/staff`, `/health`, and `/replay` work.
+- confirm app starts on port `3200`;
+- confirm `/screen`, `/`, `/staff`, `/health`, `/replay`, `/api/state`, and `/api/missions` work;
+- confirm at least one phone can vote over LAN;
+- record what has not yet been tested.
 
 ## Agent behaviour
 
 When asked to implement work:
 
-1. Read `README.md`, this file, and the relevant document in `docs/`.
+1. Read `README.md`, this file, `docs/MVP_0_2_PLAN.md`, `docs/UX_SPEC.md`, `docs/ARCHITECTURE.md`, and `docs/API_CONTRACT.md`.
 2. Propose a short plan first.
 3. Make the smallest useful change.
 4. Add or update tests.
 5. Do not introduce new dependencies without explaining why.
-6. Do not change the public demo thesis without updating `docs/PROJECT_BRIEF.md` and `docs/RESPONSIBLE_AI_DESIGN.md`.
+6. Do not add live AI or free text unless explicitly requested and documented.
 7. Report changed files and test results.
 
 Keep agent instructions concise. Put detailed design notes in `docs/`, not in this file.

@@ -1,187 +1,198 @@
-# Technical Architecture
+# Architecture — MVP 0.2
 
-## MVP architecture
+## Current architecture target
 
-Use a single local app first.
+MVP 0.2 is a single local web app running on port `3200`.
 
 ```text
-Visitor phones  →  /              ┐
-Big screen      →  /screen        ├─ FastAPI local server on :3200
-Staff UI        →  /staff         │
-Votes           →  /api/vote      │
-Join QR         →  /qr.svg        │
-Live updates    →  /ws            ┘
+Visitor phones  ─┐
+                 ├── HTTP/WebSocket ── Local app on :3200 ── Big screen
+Staff browser   ─┘                         │
+                                           └── in-memory mission state
 ```
 
-The app should run without a model. Local SLM support is an optional layer added after deterministic rounds work.
+No live model is required for MVP 0.2.
 
 ## Components
 
-| Component | Responsibility |
+| Component | Purpose |
 |---|---|
-| Mission controller | Owns mission state and round transitions |
-| Vote aggregator | Counts votes and chooses round result |
-| Proposal engine | Deterministic template first, local SLM later |
-| Validation pipeline | Checks intent, schema, rules, evidence, and safety |
-| Renderer | Updates screen state from approved mission state |
-| QR renderer | Generates a local SVG join code for `/` on the request host |
-| Staff controls | Reset, fallback, mission select, clear state |
-| Replay mode | Prepared run for no-phone/no-model fallback |
-| Health endpoint | Basic readiness and status |
+| Visitor UI | Tap-based controller for the current mission phase |
+| Screen UI | Big-screen visualisation of the round state |
+| Staff UI | Mission select, reset, fallback/replay, state inspection |
+| State store | Server-owned in-memory session and vote state |
+| Mission deck | Static mission definitions and deterministic proposal templates |
+| Proposal generator | Deterministic MVP stand-in for local AI proposal |
+| Validator | Intent, schema, rule, evidence, and safety checks |
+| Broadcaster | WebSocket or polling state updates |
+| Replay mode | No-phone fallback sequence |
 
-## State ownership
+## Server-owned state
 
-The server owns authoritative state.
+Visitor clients must not own authoritative state. They submit votes only.
 
-Phones submit votes only. Phones do not own mission state, selected winner, model output, or screen content.
-
-## Mission state model
+Suggested shape:
 
 ```json
 {
-  "session_id": "current",
-  "mission_id": "game_studio",
-  "round": 3,
-  "phase": "checking",
-  "goal": "help_player_escape",
-  "rule": "do_not_spoil_solution",
+  "mode": "live",
+  "mission_id": "game-studio",
+  "round_id": 3,
+  "phase": "vote_rule",
+  "goal_choice_id": "escape_reef_lab",
+  "rule_choice_id": null,
+  "proposal": null,
+  "checks": [],
+  "crowd_decision_id": null,
   "votes": {
-    "use_it": 4,
-    "repair": 9,
-    "reject": 1
+    "vote_goal": {
+      "escape_reef_lab": 5,
+      "find_lost_robot": 2
+    },
+    "vote_rule": {}
   },
-  "proposal": {
-    "action": "npc_hint",
-    "asset_id": "npc_helper",
-    "caption": "Look for numbers hidden near the oxygen tanks.",
-    "source_ids": [],
-    "requires_review": false
-  },
-  "checks": {
-    "intent": "pass",
-    "schema": "pass",
-    "rules": "pass",
-    "evidence": "not_required",
-    "safety": "pass"
-  },
-  "mode": "live"
+  "client_count": 3,
+  "updated_at": "2026-06-28T10:42:00+10:00"
 }
 ```
 
-## Proposal schema
+## Phase transitions
 
-All AI/model proposals must be parsed into a schema like:
+```text
+idle
+  ↓ staff start
+vote_goal
+  ↓ staff next / timer
+vote_rule
+  ↓ staff next / timer
+proposal
+  ↓ generated deterministic proposal
+checks
+  ↓ validator result
+crowd_decision
+  ↓ staff next / timer
+result
+  ↓ reset or next round
+vote_goal
+```
+
+Staff can force transition to:
+
+```text
+fallback
+replay
+idle
+```
+
+## Required routes
+
+| Route | Method | Purpose |
+|---|---|---|
+| `/` | GET | Visitor phone UI |
+| `/screen` | GET | Big-screen UI |
+| `/staff` | GET | Staff controls |
+| `/replay` | GET | Prepared fallback route |
+| `/health` | GET | Health check |
+| `/api/state` | GET | Current state |
+| `/api/missions` | GET | Mission deck summary |
+| `/api/vote` | POST | Submit vote |
+| `/api/staff/mission` | POST | Select active mission |
+| `/api/staff/reset` | POST | Reset round/session |
+| `/api/staff/mode` | POST | live/fallback/replay |
+| `/api/staff/advance` | POST | Advance phase manually |
+| `/ws` | WebSocket | Broadcast state updates |
+
+See `docs/API_CONTRACT.md`.
+
+## Proposal generation in MVP 0.2
+
+Use deterministic templates. Example:
 
 ```json
 {
-  "action": "string_enum",
-  "asset_id": "string_enum",
-  "caption": "short_string",
-  "source_ids": ["string"],
-  "requires_review": true
+  "proposal_id": "game_spoiler_001",
+  "action": "give_hint",
+  "text": "The door code is 4821.",
+  "intended_failure": "rule_break",
+  "requires_evidence": false
 }
 ```
 
-Unknown enum values are rejected.
+This proposal then goes through the same validator that a future model output would use.
 
-## Validation pipeline
+## Validation checks
 
-```text
-Raw proposal
-→ parse JSON
-→ schema validation
-→ mission action whitelist
-→ asset whitelist
-→ intent check against winning vote
-→ rule check
-→ evidence check if factual claim exists
-→ safety check
-→ approve, repair, review, or fallback
+Checks should return explicit labels:
+
+```json
+[
+  {"check": "intent", "status": "partial", "message": "Related to the chosen goal."},
+  {"check": "rule", "status": "fail", "message": "Gives away the answer."},
+  {"check": "evidence", "status": "not_required", "message": "No factual claim."},
+  {"check": "safety", "status": "pass", "message": "Public-safe."}
+]
 ```
 
-## Local SLM rules
+Allowed statuses:
 
-The local SLM may:
+- `pass`
+- `partial`
+- `warn`
+- `fail`
+- `not_required`
+- `needs_human`
+- `fallback_used`
 
-- write a short caption;
-- choose one approved action;
-- suggest one repair;
-- classify a canned example;
-- propose a hint within constraints.
+## WebSocket vs polling
 
-The local SLM may not:
-
-- execute code;
-- change vote totals;
-- control routes;
-- alter staff settings;
-- invent factual claims without evidence;
-- publish directly to screen without validation.
-
-## Suggested file layout for implementation
+Preferred:
 
 ```text
-app/
-  main.py
-  config.py
-  state.py
-  missions/
-    base.py
-    game_studio.py
-    truth_check.py
-    future_me.py
-    study_coach.py
-    reef_rescue.py
-    squad_chat.py
-  proposals/
-    templates.py
-    local_slm.py
-    schemas.py
-  validation/
-    intent.py
-    rules.py
-    evidence.py
-    safety.py
-  static/
-    phone.html
-    screen.html
-    staff.html
-    styles.css
-    app.js
-  tests/
-    test_missions.py
-    test_validation.py
-    test_routes.py
+state changes → broadcast over /ws → screen/staff/phones update
 ```
 
-## Port plan
+Acceptable MVP fallback:
 
-| Mode | Port |
-|---|---:|
-| Single local app | `3200` |
-| Split QR backend/WebSocket, if needed later | `8200` |
-| Shared model adapter | `8600` |
-| Replay service | `8700` |
-| Health/status service | `8800` |
+```text
+screen/staff/phones poll /api/state every 1–2 seconds
+```
 
-## Offline-first design
+Do not block MVP 0.2 on WebSocket polish.
 
-The application must remain demonstrable when:
+## Future local SLM architecture
 
-- local model runtime is unavailable;
-- Wi-Fi has no internet;
-- visitor phones cannot join;
-- QR scanning is unavailable;
-- WebSocket fails;
-- model output is malformed;
-- model output is slow.
+Not in MVP 0.2.
 
-Fallback order:
+Later:
 
-1. live local SLM;
-2. deterministic template proposal;
-3. staff-controlled mode;
-4. replay mode;
-5. static explainer screen.
+```text
+mission state → local SLM adapter → structured proposal JSON → validator → screen
+```
 
-The QR route must not depend on an external QR service. It should generate a local SVG so the demo works on a private or offline booth network.
+Rules for future model layer:
+
+- feature-flagged;
+- timeout quickly;
+- deterministic fallback;
+- schema validation before use;
+- no direct public rendering of raw model output;
+- no direct state mutation by model output.
+
+## Persistence
+
+MVP 0.2 should use in-memory state only.
+
+Do not add a database unless there is a clear need.
+
+## Logs
+
+Logs should be technical and non-identifying:
+
+- route hit;
+- phase transition;
+- mission id;
+- vote counts;
+- validation status;
+- errors.
+
+Do not log names, phone numbers, emails, raw free text, or device identifiers.

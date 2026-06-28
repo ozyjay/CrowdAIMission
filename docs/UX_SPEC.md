@@ -1,163 +1,246 @@
-# UX Specification
+# UX Spec — MVP 0.2
 
-## Design goal
+## UX goal
 
-Make the human-control loop visible, fast, and understandable from a distance.
+Visitors should understand the interaction in under 10–20 seconds:
 
-The visitor should not need to understand model internals. They should understand:
+> Scan in, vote, see the big screen change, and help keep the local AI on track.
+
+MVP 0.2 should feel like a working crowd-control loop, not a collection of static pages.
+
+## Screens
+
+| Screen | Route | Audience | Purpose |
+|---|---|---|---|
+| Visitor phone | `/` | Visitors | Vote through the current mission phase |
+| Big screen | `/screen` | Passersby | Show mission state and visible control loop |
+| Staff panel | `/staff` | Staff / developer | Select mission, reset, fallback, inspect state |
+| Replay | `/replay` | Everyone | Prepared no-phone fallback loop |
+| Health | `/health` | Staff / developer | Service status |
+
+## Shared state phases
+
+Use a small explicit phase model:
 
 ```text
-People set the goal.
-The local AI proposes.
-Software checks.
-Humans decide.
-The mission updates.
+idle
+vote_goal
+vote_rule
+proposal
+checks
+crowd_decision
+result
+fallback
+replay
 ```
 
-## Public title screen
+## Visitor phone UX
+
+### Idle phase
+
+Show:
 
 ```text
 Humans in the Loop
 Can the crowd keep a local AI on track?
 
-Scan. Vote. Check. Guide.
+Current mission: Game Studio Mission
+Waiting for the next vote…
 ```
 
-## Routes
+### Vote goal phase
 
-| Route | Device | Purpose |
-|---|---|---|
-| `/` | Visitor phone | Join current mission and vote |
-| `/screen` | Big screen | Public mission display |
-| `/staff` | Staff laptop/local display | Select mission, reset, fallback, replay |
-| `/api/vote` | API | Receive vote |
-| `/ws` | WebSocket | Push mission state to phones and screen |
-| `/health` | Staff/technical | Service status |
-| `/replay` | Big screen | Fallback/replay mode |
-| `/qr.svg` | Screen/staff asset | QR code for joining the visitor phone controller |
+Show:
 
-## Phone UX
+```text
+What should the helper do?
 
-The phone UI should be extremely simple:
+[Help the player escape]
+[Help find a lost robot]
+[Help solve a puzzle]
+[Help avoid a trap]
+```
 
-1. Join current round.
-2. Vote on one question.
-3. Wait / see crowd status.
-4. Vote on check/repair if prompted.
-5. Return to next round.
+After vote:
 
-### Phone principles
+```text
+Vote received.
+Watch the big screen.
+```
 
-- Use large buttons.
-- Keep each vote to 3–5 choices.
-- Avoid typing in public mode.
-- Show only the current mission and current vote.
-- Do not require login, name, email, or phone number.
-- Do not expose staff controls.
+### Vote rule phase
+
+Show:
+
+```text
+What rule should keep the AI on track?
+
+[Do not give away the answer]
+[Keep it fair]
+[Make it funny, not mean]
+[Ask the player a question]
+```
+
+### Proposal/check phase
+
+Show:
+
+```text
+The local AI is proposing.
+Watch the big screen.
+```
+
+In MVP 0.2, this is deterministic and should be treated as a prepared proposal.
+
+### Crowd decision phase
+
+Show:
+
+```text
+Is the local AI on track?
+
+[Use it]
+[Repair it]
+[Needs evidence]
+[Ask a human]
+[Use fallback]
+```
+
+### Result phase
+
+Show:
+
+```text
+Round complete.
+The crowd kept the AI on track.
+```
 
 ## Big-screen UX
 
-The big screen is the main public artifact.
+The big screen must be readable from booth distance.
 
-Recommended layout:
+Use large sections:
 
 ```text
-┌────────────────────────────────────────────────────┐
-│ HUMANS IN THE LOOP                                 │
-│ Can the crowd keep a local AI on track?            │
-├─────────────────────┬──────────────────────────────┤
-│ Mission visual       │ Control pipeline             │
-│                     │ PEOPLE SET THE GOAL          │
-│ [map/card/canvas]    │ PEOPLE SET THE RULE          │
-│                     │ LOCAL AI PROPOSED            │
-│                     │ SOFTWARE CHECKED             │
-│                     │ CROWD DECIDED                │
-│                     │ MISSION UPDATED              │
-├─────────────────────┴──────────────────────────────┤
-│ QR code | current vote | round timer | fallback tag │
-└────────────────────────────────────────────────────┘
+PEOPLE SET THE GOAL
+Help the player escape the reef lab
+
+PEOPLE SET THE RULE
+Do not give away the answer
+
+LOCAL AI PROPOSED
+“The door code is 4821.”
+
+SOFTWARE CHECKED
+Intent: partial
+Rule: fail
+Evidence: not required
+Safety: pass
+
+CROWD DECIDED
+Repair it
+
+MISSION UPDATED
+Give a hint instead
 ```
 
-The QR code should be generated locally and point to `/` on the same host used to open `/screen`. In rehearsal, staff should open `/screen` with the demo machine LAN address so visitors scan a phone-reachable URL.
+## Big-screen design rules
 
-## Staff UX
+- Show one primary state at a time.
+- Use large text and obvious labels.
+- Show vote counts only after vote submission or after the round closes, to reduce herding.
+- Do not show raw hidden prompts or model internals.
+- Do not claim to show private model reasoning.
+- If MVP uses deterministic proposals, avoid public wording that implies live AI generation.
 
-The staff UI should include:
+## Staff panel UX
 
-- select mission;
-- start round;
-- close round;
-- force result;
-- reset current mission;
-- clear all visitor input;
-- show fallback/replay;
-- toggle local AI on/off;
-- trigger safe example failure;
-- show health/status.
+Staff controls should be simple and explicit.
 
-Staff controls should be local-only or protected by booth network/physical controls.
+Required controls:
 
-Staff UI should also show the same join QR code as the screen, so staff can test phone onboarding without using the big display.
+```text
+Mission
+[Game Studio] [Deepfake Detective] [Future Me Quest]
 
-## Round timing
+Round
+[Start / Next phase] [Reset round] [Clear votes]
 
-Target round length: 60–120 seconds.
+Mode
+[Live] [Fallback] [Replay]
 
-Example:
+Danger zone
+[Clear session state]
+```
 
-| Time | Activity |
-|---:|---|
-| 0s | Mission and QR visible |
-| 15s | Vote on goal |
-| 30s | Vote on rule |
-| 45s | Local AI proposes |
-| 60s | Checks shown |
-| 75s | Crowd accepts/repairs/rejects |
-| 90s | Mission updates |
-| 105s | Next round starts |
+Status panel:
 
-## Vote types
+```text
+Mode: live
+Mission: game-studio
+Phase: vote_rule
+Connected clients: 3
+Votes this phase: 7
+Last reset: 10:42 AM
+```
 
-### Goal vote
+## Replay UX
 
-“What should the mission try to do?”
+Replay mode should be a prepared loop that does not require phones.
 
-### Rule vote
+It should show:
 
-“What must the local AI remember?”
+```text
+Live voting unavailable.
+Showing a prepared run.
 
-### Check vote
-
-“Is the local AI on track?”
-
-### Repair vote
-
-“What help does the AI need?”
-
-Options:
-
-- clearer goal;
-- stronger rule;
-- approved evidence;
-- shorter response;
-- ask a human;
-- safe fallback.
+This shows the same idea in a reliable way:
+people set the goal, local AI proposes, software checks, humans decide.
+```
 
 ## Fallback UX
 
-Fallback is not a failure state. Use this copy:
+Fallback is not a failure state. It is a public-safe mode.
+
+Use:
 
 ```text
-Live mode unavailable.
-Showing a prepared mission run.
-It shows the same idea in a reliable way.
+Live mode is unavailable right now.
+Showing a prepared demo run.
 ```
 
-## Accessibility and booth usability
+Avoid:
 
-- Use large readable text.
-- Do not rely on subtle colour changes only.
-- Use icons plus labels.
-- Keep phone buttons thumb-sized.
-- Keep big-screen states readable from 2–3 metres.
-- Make reset state obvious.
+```text
+The AI crashed.
+```
+
+## MVP 0.2 round timing
+
+Manual staff advancement is acceptable for MVP 0.2.
+
+Suggested timing once automated:
+
+| Phase | Suggested duration |
+|---|---:|
+| Vote goal | 15–20 seconds |
+| Vote rule | 15–20 seconds |
+| Proposal/check reveal | 10 seconds |
+| Crowd decision | 15–20 seconds |
+| Result | 10–15 seconds |
+
+## Accessibility / booth readability
+
+- Large buttons on phones.
+- Avoid tiny QR or tiny screen text.
+- High contrast.
+- Do not require typing.
+- Do not require accounts.
+- Allow visitors who do not scan to understand the big screen.
+
+## MVP 0.2 UX acceptance
+
+- A new visitor can understand what to tap without staff explanation.
+- The big screen makes the crowd contribution visible.
+- Staff can reset without terminal commands.
+- Replay mode still communicates the thesis.

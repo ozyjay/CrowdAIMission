@@ -1,77 +1,100 @@
-# Codex / Coding-Agent Prompts
+# Codex Prompts
 
-Use these prompts one phase at a time. Do not ask for all phases in one prompt.
+Use these prompts for incremental implementation.
 
-## Phase 0 — Plan and scaffold
+## MVP 0.2 — Plan only
 
 ```text
-Read README.md, AGENTS.md, docs/PROJECT_BRIEF.md, docs/UX_SPEC.md, and docs/ARCHITECTURE.md.
+Read README.md, AGENTS.md, docs/MVP_0_2_PLAN.md, docs/UX_SPEC.md, docs/ARCHITECTURE.md, docs/API_CONTRACT.md, and docs/TEST_PLAN.md.
 
-Create a short implementation plan for the MVP of Crowd AI Mission Control. Do not code yet. The MVP must run locally, use port 3200, provide /, /screen, /staff, /health, and /replay routes, and work without any AI model dependency.
+Create a short implementation plan for MVP 0.2. Do not code yet.
 
-Keep dependencies minimal. Include proposed file changes, tests, and fallback behaviour.
+The goal is a no-AI real round loop on port 3200 with visitor, screen, staff, replay, health, state, missions, vote, and optional WebSocket routes.
+
+Include proposed file changes, state model, tests, and fallback behaviour. Keep dependencies minimal.
 ```
 
-## Phase 1 — Static routes
+## MVP 0.2 — Implement state and routes
 
 ```text
-Implement the smallest working local app with static routes: /, /screen, /staff, /health, and /replay. Do not add model calls. Do not add open visitor text. Use port 3200 from environment variables.
+Implement MVP 0.2 route and state foundations.
 
-Add tests or a smoke test that verifies each route responds. Update README if launch commands change.
+Requirements:
+- run on APP_PORT from .env, default 3200;
+- provide GET /, /screen, /staff, /replay, /health, /api/state, /api/missions;
+- provide POST /api/vote, /api/staff/mission, /api/staff/reset, /api/staff/mode, /api/staff/advance;
+- keep state server-owned and in memory;
+- no live AI calls;
+- no visitor free text;
+- no login or personal data;
+- update scripts/smoke_test.sh if needed.
+
+Add basic tests or smoke checks. Report changed files and test results.
 ```
 
-## Phase 2 — Voting loop
+## MVP 0.2 — Add mission deck
 
 ```text
-Add a simple voting round state machine for one mission. Visitor phones submit button votes. The screen shows current mission, current vote, and result. Staff can reset the round.
+Add deterministic mission definitions for:
+1. Game Studio Mission
+2. Deepfake Detective / Truth Check
+3. Future Me Quest
 
-Keep all state server-owned. Add tests for vote counting and reset.
+Use docs/MISSION_DECK.md as the content source.
+
+Each mission needs goals, rules, deterministic proposals, check outcomes, crowd decision options, fallback result, and staff script.
+
+Add validation that mission ids and option ids are stable and unique. Add tests.
 ```
 
-## Phase 3 — Mission deck
+## MVP 0.2 — Add round loop UX
 
 ```text
-Add mission definitions for Game Studio Mission and Deepfake Detective / Truth Check using docs/MISSION_DECK.md. Each mission must include goals, rules, check options, safe failure examples, and fallback responses.
+Update /, /screen, and /staff to support the full MVP 0.2 round loop:
+idle -> vote_goal -> vote_rule -> proposal -> checks -> crowd_decision -> result.
 
-Do not add local AI yet. Use deterministic proposals. Add mission tests.
+Visitor route should show only the current vote options.
+Screen route should show the visible control pipeline.
+Staff route should select mission, advance phase, reset, clear votes, and force fallback/replay.
+
+Do not add live AI. Use deterministic proposals. Add or update tests.
 ```
 
-## Phase 4 — Big-screen control pipeline
+## MVP 0.2 — Add live update mechanism
 
 ```text
-Update /screen to show the visible control pipeline: PEOPLE SET THE GOAL, PEOPLE SET THE RULE, LOCAL AI PROPOSED, SOFTWARE CHECKED, CROWD DECIDED, MISSION UPDATED.
+Add WebSocket updates via /ws, or implement simple polling if WebSockets are not already stable.
 
-This must show external controller state only, not private model reasoning. Add a replay/fallback display state.
+The screen and staff views should update after a phone vote or staff action.
+
+Do not over-engineer. If WebSockets add too much complexity, prefer polling for MVP 0.2 and document the trade-off.
 ```
 
-## Phase 5 — Validation pipeline
+## MVP 0.2 — Hardening pass
 
 ```text
-Implement proposal validation: schema validity, action whitelist, asset whitelist, intent match, rule check, evidence-needed flag, and safety status. Model output is still optional; deterministic proposals must pass through the same validator.
+Review the app against AGENTS.md and docs/TEST_PLAN.md.
 
-Add tests for invalid JSON, unknown action, unknown asset, rule failure, unsupported factual claim, and fallback.
-```
-
-## Phase 6 — Optional local SLM adapter
-
-```text
-Add a local SLM adapter behind a feature flag. The app must still work with MODEL_ENABLED=false. Model calls must timeout quickly and fall back to deterministic templates. The model may only propose structured JSON matching the approved proposal schema.
-
-Do not let model output publish directly. Add tests for timeout, malformed output, and safe fallback.
-```
-
-## Phase 7 — Staff and rehearsal hardening
-
-```text
-Improve /staff with mission select, reset, clear state, show fallback, model on/off, and health status. Add or update scripts/check_ports.sh and scripts/smoke_test.sh so a staff member can verify the demo before rehearsal.
-
-Update docs/RUNBOOK.md with final launch and recovery steps.
-```
-
-## Phase 8 — Polish and go/no-go
-
-```text
-Review the app against docs/TEST_PLAN.md and AGENTS.md. Fix any public-demo readiness gaps. Ensure no login, no personal data collection, no unsupervised free text, fixed ports, working fallback, and clear reset.
+Fix MVP 0.2 readiness gaps:
+- route smoke tests pass;
+- phone vote updates screen;
+- staff reset works;
+- fallback/replay works;
+- no AI dependency;
+- no free text;
+- no personal data;
+- fixed port 3200;
+- clear documentation of what is and is not proven.
 
 Return changed files and test results.
+```
+
+## Later — Local SLM adapter, not MVP 0.2
+
+```text
+Do not run this until MVP 0.2 is stable.
+
+Add a local SLM adapter behind MODEL_ENABLED=false/true. The app must continue to work with MODEL_ENABLED=false.
+
+The model may only produce structured proposal JSON. All outputs must pass validators before display. Add timeout and deterministic fallback.
 ```

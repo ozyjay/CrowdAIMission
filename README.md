@@ -1,169 +1,147 @@
 # Crowd AI Mission Control
 
 **Public title:** Humans in the Loop  
-**Hook:** Can the crowd keep a local AI on track?
+**Hook:** Can the crowd keep a local AI on track?  
+**Current phase:** MVP 0.2 — Real Round Loop
 
-This is a QR phone-to-screen Open Day demo. Visitors scan a QR code, vote on a mission, watch a local AI propose an action, and help decide whether the proposal is on track, needs repair, needs evidence, or should fall back to a safe response.
+Crowd AI Mission Control is a QR phone-to-screen Open Day demo. Visitors scan a QR code, vote through short mission rounds, watch a local-AI-style proposal, and help decide whether it is on track, needs repair, needs evidence, needs a human, or should fall back to a safe response.
 
 The demo is not about “AI taking over.” It is about how IT systems keep people involved, informed, and in control.
 
-## Core loop
+## Current status
+
+MVP 0.1 smoke test is complete:
+
+- the basic app/server ran locally;
+- a mobile phone could connect to it over the local network while it was running on a Mac;
+- the project is ready to move from route smoke test to real round-loop behaviour.
+
+This does **not** yet prove Open Day readiness. The remaining proof points are: iPhone + Android, 5–10 phones, big-screen `/screen`, staff reset/fallback, local-router testing, and Framework Desktop / Fedora 43 validation.
+
+## MVP 0.2 goal
+
+Build the first useful no-AI round loop.
+
+MVP 0.2 must show:
 
 ```text
-Crowd sets the goal
-→ crowd sets the rule
-→ local AI proposes
-→ software checks intent, schema, evidence, and safety
-→ crowd/staff accept, repair, reject, or fall back
+Crowd sets a goal
+→ crowd sets a rule
+→ deterministic local-AI-style proposal appears
+→ software checks intent, schema, rule, evidence, and safety
+→ crowd/staff accept, repair, reject, ask for evidence, ask a human, or fall back
 → big screen updates
 ```
 
-## MVP routes
+The MVP 0.2 proposal generator should be deterministic. Do **not** add live SLM calls yet.
 
-| Route | Purpose |
-|---|---|
-| `/` | Visitor phone controller |
-| `/screen` | Big-screen display |
-| `/staff` | Staff controls |
-| `/api/vote` | Submit vote |
-| `/ws` | Live updates |
-| `/health` | Health/status check |
-| `/replay` | Fallback/replay screen |
-| `/qr.svg` | QR code for joining from a phone |
+## Required MVP 0.2 routes
+
+| Route | Purpose | MVP 0.2 requirement |
+|---|---|---|
+| `/` | Visitor phone controller | Shows current mission and current vote options only |
+| `/screen` | Big-screen display | Shows mission state and visible control pipeline |
+| `/staff` | Staff controls | Select mission, reset, clear votes, force fallback/replay |
+| `/replay` | No-phone fallback | Runs a prepared demo sequence without phones |
+| `/health` | Health/status check | Returns service status and basic state |
+| `/api/state` | Machine-readable state | Returns current round/session state |
+| `/api/missions` | Mission list | Returns enabled mission metadata |
+| `/api/vote` | Submit vote | Accepts tap-based votes only |
+| `/ws` | Live updates | Pushes state updates to screen/staff/phones, if implemented |
+
+Polling is acceptable as a temporary fallback if WebSockets are not stable yet.
 
 ## Default ports
 
 | Service | Port |
 |---|---:|
 | Single-app MVP | `3200` |
-| QR backend/WebSocket, if split | `8200` |
-| Shared model adapter, if used | `8600` |
-| Replay service, if split | `8700` |
-| Health/status, if split | `8800` |
+| QR backend/WebSocket, if split later | `8200` |
+| Shared model adapter, if used later | `8600` |
+| Replay service, if split later | `8700` |
+| Health/status, if split later | `8800` |
 
-## Mission deck
+Use fixed ports. Do not silently fall back to random ports in Open Day mode.
 
-The highschool mission deck is:
+## MVP 0.2 mission deck
+
+Build these first:
 
 1. **Game Studio Mission** — can the crowd keep an NPC/game helper useful without spoiling the game?
 2. **Deepfake Detective / Truth Check** — can the crowd catch unsupported AI claims?
 3. **Future Me Quest** — can the AI turn interests into better Open Day questions without overclaiming?
-4. **Study Coach: Help or Shortcut?** — can the AI help learning without doing the thinking?
-5. **Reef Rescue Mission** — can the crowd guide a reef robot while enforcing safety rules?
-6. **Squad Chat Moderator** — can the AI help keep a game/community chat safe without overreacting?
 
-See `docs/MISSION_DECK.md` for details.
+Keep these as next mission packs:
+
+4. **Study Coach: Help or Shortcut?**
+5. **Reef Rescue Mission**
+6. **Squad Chat Moderator**
+
+See `docs/MISSION_DECK.md` for content details.
 
 ## Suggested stack
 
-For the MVP, use the simplest stack that can serve routes, state, and WebSockets reliably:
+For MVP 0.2, keep the simplest reliable stack:
 
 - Python + FastAPI for the local server;
-- static HTML/CSS/JS for visitor, screen, and staff views;
-- WebSockets for live updates, or polling as fallback;
-- optional local SLM adapter only after deterministic missions work.
+- static HTML/CSS/JS for visitor, screen, and staff routes;
+- WebSockets for live updates, or short polling if that is simpler;
+- in-memory server-owned state;
+- deterministic proposal templates;
+- no live SLM dependency.
 
-A Vite/React frontend can be added later if the UI becomes complex, but it is not required for the first proof of concept.
+A richer frontend can be added after the interaction model is proven.
 
 ## Local setup
 
-Install dependencies and check the fixed demo ports:
-
 ```bash
-python3 -m pip install -r requirements.txt
+cp .env.example .env
 ./scripts/check_ports.sh
-```
-
-PowerShell:
-
-```powershell
-python3 -m pip install -r requirements.txt
-pwsh -NoProfile -File scripts/check_ports.ps1
-```
-
-You do not need a `.env` file for normal local testing. Create one from `.env.example` only when you want persistent local overrides.
-
-On macOS, some shells resolve `python3` to Xcode Python, which usually does not have this project’s packages. If startup prints a Python path under `/Applications/Xcode.app/...` and fails with `No module named uvicorn`, set `PYTHON_BIN` in `.env` to your pyenv interpreter, for example:
-
-```text
-PYTHON_BIN=/Users/cpjjh/.pyenv/versions/3.12.13/bin/python3
-```
-
-For laptop-only testing, start the app with the default localhost binding:
-
-```bash
 ./scripts/start_dev.sh
 ```
 
-PowerShell:
-
-```powershell
-pwsh -NoProfile -File scripts/start_dev.ps1
-```
-
-This runs the MVP as a single FastAPI app on `127.0.0.1:3200`. Only the laptop can reach this address. After it starts, open:
-
-- `http://127.0.0.1:3200/` for the visitor controller;
-- `http://127.0.0.1:3200/screen` for the big screen;
-- `http://127.0.0.1:3200/staff` for staff controls;
-- `http://127.0.0.1:3200/replay` for fallback/replay mode.
-
-Run `python3 -m pytest -q` for automated tests and `./scripts/smoke_test.sh` while the app is running for route smoke tests. In PowerShell, run `pwsh -NoProfile -File scripts/smoke_test.ps1`.
-
-### Same-Wi-Fi phone testing
-
-To test from a phone on the same Wi-Fi, start the app on all network interfaces:
+In a separate terminal:
 
 ```bash
-APP_HOST=0.0.0.0 ./scripts/start_dev.sh
+./scripts/smoke_test.sh
 ```
 
-PowerShell:
+For phone testing on a local network, set `VISITOR_HOST=0.0.0.0` and set `PUBLIC_DEMO_URL` to the machine’s LAN IP, for example:
 
-```powershell
-$env:APP_HOST = "0.0.0.0"
-pwsh -NoProfile -File scripts/start_dev.ps1
+```env
+PUBLIC_DEMO_URL=http://192.168.1.50:3200
 ```
-
-The script prints a `Phone URL`, for example:
-
-```text
-Phone URL:  http://192.168.0.136:3200/
-```
-
-Open that exact URL on the phone, or scan the QR code shown on `/screen` or `/staff`. Do not use `127.0.0.1` on the phone; on a phone, `127.0.0.1` means the phone itself, not the laptop.
-
-If the phone cannot connect:
-
-- confirm the laptop and phone are on the same non-guest Wi-Fi network;
-- confirm any VPN, content filter, or router client-isolation setting is not blocking local traffic;
-- on macOS, allow the terminal app, Codex, or Python in Local Network / incoming connection prompts if asked;
-- confirm the console says `Starting Crowd AI Mission Control dev server on 0.0.0.0:3200.`
 
 ## Documentation map
 
 | File | Purpose |
 |---|---|
 | `AGENTS.md` | Coding-agent instructions and non-negotiable demo rules |
+| `docs/MVP_STATUS.md` | Current prototype status and what has/has not been proven |
+| `docs/MVP_0_2_PLAN.md` | Scope, deliverables, go/no-go tests for MVP 0.2 |
 | `docs/PROJECT_BRIEF.md` | Demo thesis, audience, and Open Day story |
 | `docs/MISSION_DECK.md` | Mission concepts and phone/screen UX examples |
-| `docs/UX_SPEC.md` | Visitor, screen, and staff UX structure |
+| `docs/UX_SPEC.md` | Visitor, screen, staff, and replay UX structure |
 | `docs/ARCHITECTURE.md` | Components, routes, state model, and validation pipeline |
+| `docs/API_CONTRACT.md` | MVP 0.2 route and payload contract |
 | `docs/RESPONSIBLE_AI_DESIGN.md` | Research-backed responsible AI design rules |
 | `docs/DATA_AND_PRIVACY.md` | Visitor privacy and data-handling defaults |
 | `docs/TEST_PLAN.md` | Unit, integration, rehearsal, and go/no-go tests |
 | `docs/RUNBOOK.md` | Local startup, reset, fallback, and shutdown |
 | `docs/CODEX_PROMPTS.md` | Prompts for phased AI-assisted implementation |
 | `docs/RESEARCH_NOTES.md` | Literature anchors and design implications |
+| `docs/CHANGELOG.md` | Documentation and project status changes |
+| `docs/DOC_INDEX.md` | Suggested reading order |
 
-## Definition of done for MVP
+## Definition of done for MVP 0.2
 
-- A phone can open `/` and vote.
-- `/screen` and `/staff` show a QR code that opens `/` on the current host.
-- `/screen` updates visibly from phone input.
-- `/staff` can reset, select mission, and trigger fallback.
-- The app runs on port `3200`.
-- At least two missions work without AI dependency.
-- The local SLM layer is optional and can be disabled.
-- Every model-dependent action has deterministic fallback.
+- `/`, `/screen`, `/staff`, `/replay`, `/health`, `/api/state`, `/api/missions`, and `/api/vote` work on port `3200`.
+- A phone can open `/` and submit votes.
+- `/screen` visibly updates from phone input.
+- `/staff` can select mission, reset round/session, clear votes, and trigger fallback/replay.
+- At least three deterministic mission packs work: Game Studio, Deepfake Detective, and Future Me Quest.
+- Each mission supports goal vote, rule vote, proposal, checks, crowd decision, and result.
+- No live model dependency is required.
 - No login, app install, personal data, or unsupervised free text is required.
+- Smoke tests pass.
+- The Mac LAN test is repeated after the MVP 0.2 changes.

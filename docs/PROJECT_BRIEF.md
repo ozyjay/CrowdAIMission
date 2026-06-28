@@ -6,7 +6,13 @@
 
 ## Short public pitch
 
-Scan in, vote on a mission, watch a local AI propose what to do, and help decide whether it is useful, safe, factual, or off track.
+Scan in, vote on a mission, watch a local AI proposal, and help decide whether it is useful, safe, factual, or off track.
+
+## Current build phase
+
+**MVP 0.2 — Real Round Loop**
+
+The initial local-network smoke test has worked: a mobile phone could connect to the app running on a Mac. The next step is a real round loop with voting, screen update, staff reset, and replay/fallback.
 
 ## The IT@JCU story
 
@@ -22,15 +28,19 @@ Local AI can support productive work when humans remain in the loop and the surr
 
 The crowd acts as the human control layer:
 
-1. chooses the mission;
+1. chooses or joins a mission;
 2. sets the goal;
 3. sets the rule or constraint;
-4. evaluates the local AI proposal;
+4. evaluates the local-AI-style proposal;
 5. decides whether to accept, repair, reject, ask for evidence, ask a human, or fall back.
 
 ## What the AI does
 
-The local SLM proposes a bounded response, action, hint, caption, or repair. It never directly controls public state.
+In the final concept, a local SLM proposes a bounded response, action, hint, caption, or repair.
+
+In MVP 0.2, this is represented by deterministic proposal templates so the team can test the interaction safely before adding a live model.
+
+The AI or proposal generator never directly controls public state.
 
 ## What the software does
 
@@ -58,31 +68,70 @@ LOCAL AI PROPOSED
 ...
 
 SOFTWARE CHECKED
-Intent ✓  Schema ✓  Safety ✓  Evidence ?
+...
 
 CROWD DECIDED
-Repair it
+...
 
 MISSION UPDATED
 ...
 ```
 
-## What this is not
+This is external system state, not private model reasoning.
 
-This is not:
+## Primary audiences
 
-- a generic AI art demo;
-- an open chatbot;
-- a truth-by-majority voting game;
-- a claim that human-AI teams are always better;
-- a claim that local models are automatically correct or safe.
+### Highschoolers
 
-## Success criteria
+Use missions that feel relevant to games, online truth, schoolwork, future choices, and creative tech.
 
-A visitor should understand within 30 seconds that:
+### Parents and carers
 
-- the AI is local and limited;
-- people give it direction;
-- software checks its proposal;
-- humans can reject or repair it;
-- fallback is part of responsible design.
+Use missions that show accuracy, privacy, evidence, and when the system should ask staff rather than guess.
+
+### Kids and passersby
+
+Use visual missions such as Reef Rescue or Game Studio to create an immediate hook.
+
+## MVP 0.2 mission focus
+
+Build three highschool-friendly missions first:
+
+1. **Game Studio Mission** — useful game helper without spoiling the game.
+2. **Deepfake Detective / Truth Check** — unsupported AI claims and evidence checks.
+3. **Future Me Quest** — turning interests into better Open Day questions without overclaiming.
+
+## Public wording
+
+Use:
+
+> People set the goal, the local AI proposes, and the software checks before the result is used.
+
+Use:
+
+> This shows the system’s control state, not private model reasoning.
+
+Avoid:
+
+> The AI is thinking.
+
+Avoid:
+
+> The crowd makes the AI correct.
+
+## Why this is not just an image demo
+
+The visual output is only the surface. The point is the system around the model:
+
+- QR onboarding;
+- local network service;
+- phone controller;
+- big-screen state;
+- staff controls;
+- evidence and safety checks;
+- reset and fallback;
+- local model constraints.
+
+## MVP 0.2 success statement
+
+MVP 0.2 succeeds if a phone can guide a complete mission round, the screen updates visibly, staff can reset and replay, and the whole loop works with deterministic content and no AI dependency.

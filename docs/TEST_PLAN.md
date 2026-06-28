@@ -1,86 +1,188 @@
-# Test Plan
+# Test Plan — MVP 0.2
 
-## Test categories
+## Purpose
 
-| Test type | Purpose |
+MVP 0.2 testing should prove the real round loop works before adding live AI.
+
+The key question is:
+
+> Can a phone vote through a mission, update the big screen, and can staff reset/fallback without developer intervention?
+
+## Test levels
+
+| Level | Purpose |
 |---|---|
-| Unit tests | Validate mission definitions, schemas, and rule checks |
-| Route tests | Confirm `/`, `/screen`, `/staff`, `/health`, `/replay` respond |
-| QR tests | Confirm `/qr.svg` renders a local join QR for the request host |
-| Voting tests | Confirm votes aggregate and rounds advance correctly |
-| WebSocket tests | Confirm screen updates after votes |
-| Mission tests | Confirm each mission has safe success and failure examples |
-| Model tests | Confirm malformed, unsafe, slow, and unsupported outputs fall back |
-| Privacy tests | Confirm no personal fields are required or stored |
-| Rehearsal tests | Confirm phones, QR, display, reset, and fallback work in booth conditions |
+| Static route smoke tests | Confirm required routes respond |
+| API tests | Confirm state, mission list, vote, reset, mode, and advance work |
+| State-machine tests | Confirm phase transitions and reset behaviour |
+| Mission tests | Confirm each mission has valid goals, rules, proposals, checks, fallback |
+| Manual LAN test | Confirm phone can connect and vote |
+| Staff test | Confirm non-developer can operate reset/fallback |
+| Screen test | Confirm big-screen readability and updates |
 
-## MVP acceptance criteria
+## MVP 0.1 regression
 
-- [ ] App starts on port `3200`.
-- [ ] `/` opens on phone-sized screen.
-- [ ] Same-Wi-Fi phone testing uses `APP_HOST=0.0.0.0 ./scripts/start_dev.sh`.
-- [ ] Start script prints a `Phone URL` using the demo machine LAN address.
-- [ ] `/qr.svg` returns an SVG QR code for the visitor controller.
-- [ ] `/screen` and `/staff` display the join QR code.
-- [ ] `/screen` shows public mission state.
-- [ ] `/staff` can select mission, reset, and fallback.
-- [ ] `/health` returns healthy status.
-- [ ] At least two missions run without AI dependency.
-- [ ] Votes update the big screen.
-- [ ] Staff reset clears current state.
-- [ ] Replay mode works without model or phones.
-- [ ] No login, app install, or personal data collection.
-- [ ] No unsupervised visitor free text.
+Repeat the proven test:
 
-## QR readiness gate
+- start app on Mac;
+- connect phone over local network;
+- open visitor route;
+- confirm phone can interact.
 
-- [ ] Server is started with `APP_HOST=0.0.0.0` for phone rehearsal.
-- [ ] Phone uses the printed `Phone URL`, not `127.0.0.1`.
-- [ ] Big screen is opened with the LAN URL so the QR code is phone-reachable.
-- [ ] QR code opens on iPhone.
-- [ ] QR code opens on Android.
-- [ ] No login required.
-- [ ] No app install required.
-- [ ] New phone can join and vote in under 10 seconds.
-- [ ] At least 10 test phones can connect during rehearsal.
-- [ ] Big screen updates reliably.
-- [ ] Staff can switch to no-phone fallback.
+## Required route smoke test
 
-## Mission regression matrix
+`./scripts/smoke_test.sh` should check:
 
-| Mission | Success case | Safe failure | Expected repair |
-|---|---|---|---|
-| Game Studio | Gives hint without answer | Spoils puzzle | Convert answer to hint |
-| Truth Check | Flags unsupported claim | Invents event/course detail | Ask staff / neutral wording |
-| Future Me | Creates useful questions | Overconfident career prediction | Offer options and questions |
-| Study Coach | Explains concept | Writes final answer | Ask guiding question |
-| Reef Rescue | Follows coral rule | Crosses coral | Safer route |
-| Squad Chat | Allows constructive feedback | Blocks harmless message or allows toxic one | Adjust verdict/escalate |
+- `/`
+- `/screen`
+- `/staff`
+- `/replay`
+- `/health`
+- `/api/state`
+- `/api/missions`
 
-## Model-output tests
+## API tests
 
-Test that each of these falls back safely:
+### `/api/state`
 
-- invalid JSON;
-- unknown action;
-- unknown asset;
-- unsupported factual claim;
-- unsafe content;
-- response too long;
-- model timeout;
-- empty response;
-- model unavailable;
-- WebSocket unavailable.
+- returns JSON;
+- includes mode, mission id, phase, round id;
+- does not include personal data.
 
-## Go/no-go for Open Day
+### `/api/missions`
 
-The demo is not Open Day ready until:
+- returns enabled missions;
+- includes Game Studio, Deepfake Detective, Future Me Quest;
+- mission ids are stable.
 
-- it runs for at least 60 minutes without restart;
-- staff can reset in under 30 seconds;
-- staff can switch to fallback in under 30 seconds;
-- a non-developer can start it from cold boot;
-- QR onboarding passes rehearsal;
-- all active routes use the documented ports;
-- phone testing works from the documented `APP_HOST=0.0.0.0` startup path;
-- all mission content has been reviewed for safety and public wording.
+### `/api/vote`
+
+- accepts valid vote for current phase;
+- rejects unknown option id;
+- rejects vote for wrong phase;
+- updates vote count;
+- triggers screen/staff update.
+
+### `/api/staff/reset`
+
+- clears votes;
+- clears proposal/checks/result;
+- preserves or resets mission depending on scope;
+- broadcasts update.
+
+### `/api/staff/mission`
+
+- accepts known mission id;
+- rejects unknown mission id;
+- resets round to idle or vote_goal.
+
+### `/api/staff/mode`
+
+- supports live, fallback, replay;
+- rejects unknown mode.
+
+## State-machine tests
+
+Test transitions:
+
+```text
+idle -> vote_goal -> vote_rule -> proposal -> checks -> crowd_decision -> result
+```
+
+Test staff overrides:
+
+```text
+any phase -> fallback
+any phase -> replay
+any phase -> reset
+```
+
+## Mission tests
+
+Each MVP 0.2 mission must have:
+
+- at least 3 goal options;
+- at least 3 rule options;
+- at least 1 deterministic proposal;
+- at least 1 safe failure example;
+- at least 1 fallback result;
+- check outcomes for intent, rule, evidence, safety;
+- staff script.
+
+## Manual test script
+
+1. Start app on port `3200`.
+2. Open `/screen` on desktop.
+3. Open `/staff` on desktop.
+4. Open `/` on phone using LAN IP.
+5. Select **Game Studio Mission** in staff panel.
+6. Start round.
+7. Vote goal from phone.
+8. Advance to rule vote.
+9. Vote rule from phone.
+10. Advance to proposal/check.
+11. Confirm deterministic proposal and checks show on screen.
+12. Vote crowd decision from phone.
+13. Confirm result shows on screen.
+14. Reset from staff route.
+15. Repeat for Deepfake Detective and Future Me Quest.
+16. Trigger fallback.
+17. Trigger replay.
+18. Confirm smoke test still passes.
+
+## Multi-device test
+
+MVP 0.2 target:
+
+- one phone minimum;
+- two phones preferred;
+- iPhone + Android if available.
+
+Later rehearsal target:
+
+- 5 phones;
+- then 10 phones;
+- then local router / Framework Desktop.
+
+## Big-screen readability test
+
+Check:
+
+- readable from 2–3 metres;
+- active phase obvious;
+- crowd choice obvious;
+- checks visible but not too text-heavy;
+- result visible;
+- fallback message clear.
+
+## Privacy test
+
+Confirm:
+
+- no login;
+- no names;
+- no email;
+- no phone number;
+- no free text;
+- no persistent visitor profile;
+- reset clears visible visitor state.
+
+## MVP 0.2 go/no-go
+
+Go if:
+
+- route and API smoke tests pass;
+- three mission rounds work;
+- phone vote updates screen;
+- staff reset and fallback work;
+- no AI dependency is required;
+- no personal data is collected.
+
+No-go if:
+
+- phone cannot vote reliably;
+- screen does not update;
+- staff cannot reset;
+- fallback/replay does not work;
+- free text or personal data is required;
+- app chooses random ports.

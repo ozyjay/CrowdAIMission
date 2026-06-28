@@ -1,39 +1,58 @@
 # Mission Deck
 
-## Shared mission loop
+## Purpose
 
-All missions use the same interaction pattern:
+Mission packs give the crowd different ways to test whether a local AI can stay on track.
+
+Each mission uses the same core interaction:
 
 ```text
-1. Select mission
-2. Crowd votes on goal
-3. Crowd votes on rule
-4. Local AI proposes
-5. Software checks
-6. Crowd decides: use, repair, reject, evidence, human, fallback
-7. Screen updates
+choose goal → choose rule → proposal → checks → crowd decision → result
 ```
 
-## Mission categories
+MVP 0.2 should implement three missions first:
 
-| Category | Mission | Audience pull | Core lesson |
-|---|---|---|---|
-| Games / creativity | Game Studio Mission | Highschoolers, gamers, passersby | AI should assist without taking over |
-| Truth / synthetic media | Deepfake Detective / Truth Check | Highschoolers, teachers, parents | Unsupported AI claims need evidence |
-| Future / identity | Future Me Quest | Prospective students | AI should help ask better questions, not predict a future |
-| School / AI literacy | Study Coach: Help or Shortcut? | Students and teachers | AI should support learning, not do the work |
-| Local impact / environment | Reef Rescue Mission | Families, science-curious visitors | AI needs safety and environmental constraints |
-| Online community / safety | Squad Chat Moderator | Gamers, cyber-curious students | Moderation needs judgement, context, and escalation |
+1. Game Studio Mission.
+2. Deepfake Detective / Truth Check.
+3. Future Me Quest.
+
+Do not use audience labels publicly. Use mission labels.
 
 ---
 
-# 1. Game Studio Mission
+## Mission schema
 
-## Hook
+Each mission should define:
+
+```json
+{
+  "id": "game-studio",
+  "title": "Game Studio Mission",
+  "hook": "Can the crowd keep a game helper useful without spoiling the game?",
+  "goals": [],
+  "rules": [],
+  "proposals": [],
+  "decision_options": [],
+  "fallback": {},
+  "staff_script": "..."
+}
+```
+
+---
+
+# MVP 0.2 Missions
+
+## 1. Game Studio Mission
+
+### Hook
 
 Can the crowd keep a game helper useful without spoiling the game?
 
-## Big-screen scenario
+### Audience pull
+
+Highschoolers, gamers, creative visitors, passersby.
+
+### Big-screen scenario
 
 ```text
 MISSION: Build a helpful NPC
@@ -44,66 +63,75 @@ Help the player escape the reef lab.
 Crowd rule:
 Do not give away the solution.
 
-Local AI proposes:
+Local AI proposal:
 “The door code is 4821.”
 
-Crowd check:
-Off track — it solved the puzzle.
+Software check:
+Rule broken — solved the puzzle.
 
-Repaired:
+Crowd repair:
+Give a hint instead.
+
+Mission update:
 “Look for numbers hidden near the oxygen tanks.”
 ```
 
-## Phone choices
+### Goal options
 
-Goal:
+- Help the player escape the reef lab.
+- Help the player find a lost robot.
+- Help the player solve a puzzle.
+- Help the player avoid a trap.
 
-- help the player escape;
-- add a twist;
-- make the NPC funnier;
-- make the level fairer;
-- help the player learn the mechanic.
+### Rule options
 
-Rule:
+- Do not give away the answer.
+- Keep it fair.
+- Make it funny, not mean.
+- Ask the player a question.
 
-- do not give away the answer;
-- keep it family-friendly;
-- keep the player in control;
-- give hints, not solutions;
-- keep it short.
+### Decision options
 
-Check:
+- Use it.
+- Repair: too much answer.
+- Repair: not enough help.
+- Repair: wrong tone.
+- Ask the AI to try again.
 
-- use it;
-- too easy;
-- too vague;
-- spoiled the answer;
-- ask for a better hint.
+### Safe failure examples
 
-## Safe failure examples
+- gives away a puzzle code;
+- ignores the chosen goal;
+- becomes too dramatic or confusing;
+- uses the wrong tone.
 
-- AI reveals the answer.
-- AI ignores the chosen rule.
-- AI invents an impossible item.
-- AI makes the scene too complex.
+### Fallback result
 
-## Fallback
+```text
+Prepared hint: “Check the objects near the oxygen tanks. One of them has a clue.”
+```
 
-Use prepared NPC hints from a deterministic table.
+### Staff script
+
+> “The crowd is testing whether a local AI helper can give useful game hints without taking over the game.”
 
 ---
 
-# 2. Deepfake Detective / Truth Check
+## 2. Deepfake Detective / Truth Check
 
-## Hook
+### Hook
 
 Can the crowd catch unsupported AI claims?
 
-## Safe framing
+### Audience pull
 
-Use harmless synthetic claims about events, course details, campus myths, technology rumours, or fake generated captions. Do not use sexual, humiliating, or identity-targeted deepfake examples.
+Highschoolers, teachers, parents, digitally cautious visitors.
 
-## Big-screen scenario
+### Important safety note
+
+This mission should use harmless synthetic examples: fake event details, fake campus facts, fake tech claims, and misleading captions. Do not use sexual deepfake examples, real student images, real private individuals, or political persuasion examples.
+
+### Big-screen scenario
 
 ```text
 MISSION: Check the AI post
@@ -111,262 +139,205 @@ MISSION: Check the AI post
 Local AI claim:
 “JCU is launching an underwater robot degree next month.”
 
-System check:
+Software check:
 No approved source found.
 
 Crowd decision:
 Flag as unsupported.
 
-Repaired:
+Repaired response:
 “Ask staff about IT, AI, robotics, and marine technology pathways.”
 ```
 
-## Phone choices
+### Goal options
 
-Concern:
+- Check a campus claim.
+- Check a tech-news claim.
+- Check an event-detail claim.
+- Check an AI image caption.
 
-- unsupported claim;
-- too confident;
-- might be real but needs source;
-- misleading image/caption;
-- looks okay.
+### Rule options
 
-Repair:
+- Do not invent facts.
+- Ask for evidence.
+- Be cautious when unsure.
+- Ask a human for current details.
 
-- ask for a source;
-- make it neutral;
-- ask staff;
-- remove the claim;
-- use approved facts only.
+### Decision options
 
-## Safe failure examples
+- Looks supported.
+- Unsupported claim.
+- Too confident.
+- Needs a source.
+- Ask staff.
 
-- AI invents an event detail.
-- AI claims certainty without evidence.
-- AI turns a rumour into a fact.
-- AI describes a generated image as real.
+### Safe failure examples
 
-## Fallback
+- invents a new course;
+- invents a current event time;
+- treats a generated image caption as fact;
+- makes a future claim without evidence.
 
-Use scripted claim cards with known expected verdicts.
+### Fallback result
+
+```text
+Prepared repair: “This needs a source. Ask staff for current details.”
+```
+
+### Staff script
+
+> “The crowd is checking whether a local AI should answer, ask for evidence, or send the question to a person.”
 
 ---
 
-# 3. Future Me Quest
+## 3. Future Me Quest
 
-## Hook
+### Hook
 
 Can a local AI turn interests into better Open Day questions without overclaiming?
 
-## Big-screen scenario
+### Audience pull
+
+Prospective students and highschoolers who are thinking about pathways.
+
+### Big-screen scenario
 
 ```text
 MISSION: Build better Open Day questions
 
 Crowd interest:
-AI + games + helping people
+Games + AI + helping people
 
-Local AI proposes:
+Local AI proposal:
 “You should definitely become a game developer.”
 
-Crowd check:
-Too narrow / overconfident.
+Software check:
+Overconfident and too narrow.
 
-Repaired:
+Crowd repair:
+Turn it into useful questions.
+
+Repaired result:
 “Ask staff what kinds of projects combine software, games, AI, data, and human-centred design.”
 ```
 
-## Phone choices
+### Goal options
 
-Interest:
+- Find better Open Day questions.
+- Connect interests to IT projects.
+- Compare possible pathways.
+- Find something hands-on to try.
 
-- AI and robots;
-- games and apps;
-- cybersecurity;
-- data and biology;
-- helping people with technology;
-- creative media and design.
+### Interest options
 
-Open Day goal:
+Use these as goal-like choices or as a second vote, depending on the UI:
 
-- find a course direction;
-- ask better questions;
-- see what students build;
-- understand career options;
-- try something hands-on.
+- AI and robots.
+- Games and apps.
+- Cybersecurity.
+- Data and biology.
+- Helping people with technology.
 
-Check:
+### Rule options
 
-- useful;
-- too vague;
-- too confident;
-- needs staff answer;
-- make it more hands-on.
+- Do not predict one perfect career.
+- Do not invent course details.
+- Give options, not guarantees.
+- Ask staff for current details.
 
-## Safe failure examples
+### Decision options
 
-- AI guarantees a career outcome.
-- AI makes narrow assumptions from one interest.
-- AI invents course details.
-- AI gives advice that should be staff-guided.
+- Useful question.
+- Too vague.
+- Too confident.
+- Needs staff.
+- Make it more hands-on.
 
-## Fallback
+### Safe failure examples
 
-Use curated question cards.
+- guarantees a job;
+- tells the visitor what they “should definitely” do;
+- invents a course feature;
+- gives vague motivation copy without a useful next question.
+
+### Fallback result
+
+```text
+Prepared question: “What kinds of projects do IT students build, and how do AI, software, data, cybersecurity, or games fit into them?”
+```
+
+### Staff script
+
+> “The crowd is turning vague AI advice into better questions a real visitor could ask at Open Day.”
 
 ---
 
-# 4. Study Coach: Help or Shortcut?
+# Later Missions
 
-## Hook
+## 4. Study Coach: Help or Shortcut?
 
-Can the crowd keep an AI study helper useful without letting it do the thinking?
+### Hook
 
-## Big-screen scenario
+Can the AI help learning without doing the thinking?
+
+### Core idea
+
+The crowd decides whether an AI response is coaching, overhelping, hallucinating, or asking the student to think.
+
+### Example
 
 ```text
-MISSION: Help with a programming problem
+Student asks:
+“Explain this assignment question.”
 
-Crowd rule:
-Teach the concept, do not write the final answer.
+AI proposal:
+“Here is the full answer to submit.”
 
-Local AI proposes:
-“Here is the complete solution code...”
-
-Crowd check:
-Off track — it did the work.
-
-Repaired:
-“Start by explaining what a loop does, then ask the student what should happen next.”
+Crowd decision:
+Too much — coach, do not replace the student.
 ```
-
-## Phone choices
-
-Rule:
-
-- explain the idea;
-- give a hint;
-- ask a question;
-- show a tiny example;
-- do not write the final answer.
-
-Check:
-
-- helpful coaching;
-- too much answer;
-- too vague;
-- hallucinated;
-- ask the learner a question.
-
-## Fallback
-
-Use prepared coaching patterns.
 
 ---
 
-# 5. Reef Rescue Mission
+## 5. Reef Rescue Mission
 
-## Hook
+### Hook
 
-Can the crowd guide a reef robot while keeping it safe?
+Can the crowd guide a reef robot safely?
 
-## Big-screen scenario
+### Core idea
 
-```text
-MISSION: Find the lost sensor
-
-Crowd rule:
-Do not touch coral.
-
-Local AI proposes:
-Move through the coral to reach the sensor faster.
-
-Crowd check:
-Rule broken.
-
-Repaired:
-Scan around the coral from a safe distance.
-```
-
-## Phone choices
-
-Goal:
-
-- find the lost sensor;
-- map the reef;
-- help a scientist;
-- check water temperature.
-
-Rule:
-
-- do not touch coral;
-- ask a human before risky actions;
-- save battery;
-- stay near the research boat.
-
-Check:
-
-- use it;
-- breaks the rule;
-- ignored the goal;
-- ask for safer plan;
-- fallback.
-
-## Fallback
-
-Use deterministic mission actions and simple animation states.
+The crowd sets a mission and safety rule. The AI proposes an action. The crowd catches rule breaks like “touch coral” or “ignore battery.”
 
 ---
 
-# 6. Squad Chat Moderator
+## 6. Squad Chat Moderator
 
-## Hook
+### Hook
 
-Can the crowd help a local AI keep a game chat safe without overreacting?
+Can the AI help keep chat safe without overreacting?
 
-## Big-screen scenario
+### Core idea
+
+The crowd classifies canned game/community chat as helpful, toxic, risky, joking, or needs human review.
+
+Use only harmless prewritten examples.
+
+---
+
+# Mission selection UX
+
+For MVP 0.2, staff should select the active mission from `/staff`. Phones should join the current mission rather than choosing from a long list.
+
+The big screen can show the mission deck during idle/replay mode:
 
 ```text
-MISSION: Keep the squad chat useful
+Can the crowd keep a local AI on track?
 
-Chat message:
-“That was terrible, try defending the left path next time.”
+Current mission:
+Game Studio Mission
 
-Local AI proposes:
-Block as toxic.
-
-Crowd check:
-Too strict — this is gameplay feedback.
-
-Repaired:
-Allow, but encourage constructive tone.
+Next missions:
+Deepfake Detective
+Future Me Quest
 ```
-
-## Phone choices
-
-Verdict:
-
-- helpful;
-- heated but okay;
-- toxic;
-- personal information risk;
-- needs human moderator.
-
-Repair:
-
-- allow;
-- soften tone;
-- warn;
-- hide;
-- escalate.
-
-## Safe failure examples
-
-- AI blocks harmless feedback.
-- AI allows personal attacks.
-- AI misses personal information.
-- AI escalates too much.
-
-## Fallback
-
-Use canned chat examples with expected categories.

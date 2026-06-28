@@ -1,77 +1,88 @@
 # Research Notes
 
-This is a short research anchor file for the demo thesis.
+## Core anchor
 
-## Anchor idea
+Paper [1] from the literature review is a key design anchor:
 
-Human-AI collaboration is not automatically better. The project should demonstrate careful task design, role design, and feedback loops rather than claim that “crowd + AI is smarter.”
-
-## Paper 1 — Human-AI combinations
-
-**Vaccaro, Almaatouq, and Malone (2024), “When combinations of humans and AI are useful: A systematic review and meta-analysis.”**
-
-Useful takeaway for this demo:
-
-- Human-AI combinations are heterogeneous.
-- They can perform worse than the best human-only or AI-only option.
-- Creative/content-generation tasks appear more promising than decision tasks.
+**Vaccaro, Almaatouq & Malone (2024), “When combinations of humans and AI are useful: A systematic review and meta-analysis.”**
 
 Design implication:
 
-- Use bounded creative missions, not consequential decision-making.
-- Evaluate whether the system improves agency, understanding, and control, not just output quality.
-- Do not claim that the crowd makes the AI correct.
+> Human-AI collaboration is not automatically better. It depends on the task and interaction design. Evidence is more promising for creative/content-generation tasks than for decision-making tasks.
 
-Reference:
+For this demo, that means:
 
-- https://arxiv.org/abs/2405.06087
+- use creative, bounded missions;
+- do not ask the crowd to decide factual truth;
+- do not claim that “crowd + AI is always smarter”;
+- evaluate whether the interface helps people keep the local AI on track.
 
-## Small language models
+## Local SLM rationale
 
-SLMs are relevant because they are lower-latency, cheaper, easier to run locally, and better suited to resource-constrained or privacy-sensitive settings. Their limits are part of the demo story.
+The demo frames local SLMs as useful because they may offer:
 
-Design implication:
+- lower latency;
+- lower operating cost;
+- offline/local operation;
+- privacy advantages;
+- task-specific deployment.
 
-- Local AI should have a narrow role.
-- Surround it with schemas, validators, fallback, and human feedback.
-- Do not assume smaller/local means safer or more truthful.
+But local does not mean automatically correct or safe. The system still needs constraints, checks, fallback, and human oversight.
 
-References:
+## Human-in-the-loop design implication
 
-- https://arxiv.org/abs/2411.03350
-- https://arxiv.org/abs/2510.13890
+The crowd must have real influence over the outcome. Superficial “approval” is not enough.
 
-## Human-centred AI and meaningful control
+In this demo, the crowd:
 
-Relevant principles:
+- sets goals;
+- sets rules;
+- judges whether the proposal stayed on track;
+- chooses repair direction.
 
-- high automation can coexist with high human control;
-- the human role must have real authority;
-- people need compatible representations of what the system is doing;
-- accountability must be traceable to human choices and system design.
+Staff retain final reset/fallback authority.
 
-Design implication:
+## Co-creative design implication
 
-- Show the control pipeline.
-- Give the crowd meaningful choices.
-- Give staff real override/reset/fallback controls.
+The mission loop should be iterative:
 
-## Trust and automation bias
+```text
+human direction → AI-style proposal → software checks → human repair → result
+```
 
-Explanations alone do not guarantee better judgement. Interfaces should encourage checking, verification, and calibrated trust.
+This is stronger than one prompt followed by one generated output.
 
-Design implication:
+## Collective intelligence caution
 
-- Show check outcomes, not “AI reasoning.”
-- Let visitors catch safe failures.
-- Use clear labels such as `unsupported claim`, `breaks rule`, and `needs human`.
+The crowd can express preference or detect obvious mismatch, but majority vote is not truth.
 
-## RAG / grounding / abstention
+Use voting for:
 
-Evidence retrieval and abstention can improve reliability but do not guarantee truth.
+- goals;
+- constraints;
+- usefulness;
+- repair direction.
 
-Design implication:
+Do not use voting as proof that a factual claim is correct.
 
-- Factual claims need approved sources.
-- Unsupported factual claims should become neutral phrasing or staff questions.
-- The system should fall back rather than guess.
+## Trust calibration implication
+
+Do not show vague “confidence” numbers as if they make the AI trustworthy.
+
+Show inspectable state instead:
+
+```text
+Crowd chose...
+Proposal says...
+Rule check...
+Evidence check...
+Crowd decision...
+```
+
+## MVP 0.2 research position
+
+MVP 0.2 intentionally uses deterministic proposals. This lets the team test the human-in-the-loop interaction before introducing model variability.
+
+The research question for the prototype becomes:
+
+> Does making the control loop visible help visitors understand that useful AI systems require goals, rules, evidence, human judgement, and fallback?

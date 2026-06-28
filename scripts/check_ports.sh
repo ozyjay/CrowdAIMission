@@ -1,23 +1,30 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-PORTS=(3200 8200 8600 8700 8800)
+if [ -f .env ]; then
+  set -a
+  # shellcheck disable=SC1091
+  source .env
+  set +a
+fi
 
-for port in "${PORTS[@]}"; do
-  if command -v lsof >/dev/null 2>&1; then
-    if lsof -iTCP:"$port" -sTCP:LISTEN >/dev/null 2>&1; then
-      echo "Port $port is already in use:"
-      lsof -iTCP:"$port" -sTCP:LISTEN
-      exit 1
-    fi
-  elif command -v ss >/dev/null 2>&1; then
-    if ss -ltn | awk '{print $4}' | grep -q ":$port$"; then
-      echo "Port $port is already in use."
-      ss -ltn | grep ":$port"
-      exit 1
-    fi
-  else
-    echo "No lsof or ss available; cannot check port $port."
+APP_PORT="${APP_PORT:-3200}"
+
+if command -v lsof >/dev/null 2>&1; then
+  if lsof -iTCP:"${APP_PORT}" -sTCP:LISTEN -n -P >/dev/null 2>&1; then
+    echo "Port ${APP_PORT} is already in use."
+    lsof -iTCP:"${APP_PORT}" -sTCP:LISTEN -n -P || true
+    echo "Stop the process or change APP_PORT deliberately. Do not use random fallback ports for Open Day mode."
+    exit 1
   fi
-  echo "Port $port OK"
-done
+elif command -v ss >/dev/null 2>&1; then
+  if ss -ltn | awk '{print $4}' | grep -Eq ":${APP_PORT}$"; then
+    echo "Port ${APP_PORT} is already in use."
+    ss -ltnp | grep -E ":${APP_PORT}\b" || true
+    exit 1
+  fi
+else
+  echo "No lsof or ss found; skipping port check."
+fi
+
+echo "Port ${APP_PORT} is available."
