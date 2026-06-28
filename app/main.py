@@ -1,8 +1,13 @@
 from pathlib import Path
 import asyncio
+from io import BytesIO
+from xml.sax.saxutils import escape
 
-from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
-from fastapi.responses import FileResponse
+import qrcode
+from qrcode.image.svg import SvgPathImage
+
+from fastapi import FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect
+from fastapi.responses import FileResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
@@ -57,6 +62,29 @@ def static_file(filename: str) -> FileResponse:
 @app.get("/")
 async def phone() -> FileResponse:
     return static_file("phone.html")
+
+
+@app.get("/qr.svg", name="qr_code")
+async def qr_code(request: Request) -> Response:
+    join_url = str(request.url_for("phone"))
+    image = qrcode.make(
+        join_url,
+        image_factory=SvgPathImage,
+        border=2,
+        box_size=12,
+    )
+    output = BytesIO()
+    image.save(output)
+    svg = output.getvalue().decode("utf-8")
+    title = f"<title>{escape(join_url)}</title><desc>Scan to join the visitor controller.</desc>"
+    svg_open = svg.index("<svg")
+    svg_open_end = svg.index(">", svg_open)
+    svg = f"{svg[:svg_open_end + 1]}{title}{svg[svg_open_end + 1:]}"
+    return Response(
+        content=svg,
+        media_type="image/svg+xml",
+        headers={"Cache-Control": "no-store"},
+    )
 
 
 @app.get("/screen")

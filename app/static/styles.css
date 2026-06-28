@@ -99,6 +99,7 @@ p {
 .panel,
 .mission-visual,
 .pipeline,
+.join-panel,
 .proposal-band {
   background: var(--panel);
   border: 1px solid var(--line);
@@ -184,6 +185,25 @@ p {
   background: #efeff8;
 }
 
+.join-panel {
+  align-items: center;
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.qr-code {
+  aspect-ratio: 1;
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: block;
+  height: auto;
+  max-width: 220px;
+  padding: 0.6rem;
+  width: min(34vw, 220px);
+}
+
 .check-grid {
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
 }
@@ -227,5 +247,13 @@ p {
 @media (max-width: 780px) {
   .screen-grid {
     grid-template-columns: 1fr;
+  }
+
+  .join-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .qr-code {
+    width: min(70vw, 220px);
   }
 }

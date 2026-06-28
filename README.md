@@ -29,6 +29,7 @@ Crowd sets the goal
 | `/ws` | Live updates |
 | `/health` | Health/status check |
 | `/replay` | Fallback/replay screen |
+| `/qr.svg` | QR code for joining from a phone |
 
 ## Default ports
 
@@ -104,7 +105,7 @@ The script prints a `Phone URL`, for example:
 Phone URL:  http://192.168.0.136:3200/
 ```
 
-Open that exact URL on the phone. Do not use `127.0.0.1` on the phone; on a phone, `127.0.0.1` means the phone itself, not the laptop.
+Open that exact URL on the phone, or scan the QR code shown on `/screen` or `/staff`. Do not use `127.0.0.1` on the phone; on a phone, `127.0.0.1` means the phone itself, not the laptop.
 
 If the phone cannot connect:
 
@@ -132,6 +133,7 @@ If the phone cannot connect:
 ## Definition of done for MVP
 
 - A phone can open `/` and vote.
+- `/screen` and `/staff` show a QR code that opens `/` on the current host.
 - `/screen` updates visibly from phone input.
 - `/staff` can reset, select mission, and trigger fallback.
 - The app runs on port `3200`.

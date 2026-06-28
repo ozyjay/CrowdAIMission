@@ -46,6 +46,7 @@ Minimum routes:
 - `/ws` — live updates.
 - `/health` — service health.
 - `/replay` — fallback/replay screen.
+- `/qr.svg` — QR code for joining the visitor phone controller.
 
 ## Ports
 
@@ -59,7 +60,7 @@ Use fixed ports.
 
 Do not silently fall back to random ports in Open Day mode.
 
-For same-Wi-Fi phone testing, start the single-app MVP with `APP_HOST=0.0.0.0 ./scripts/start_dev.sh` and use the printed `Phone URL`. Do not tell visitors or staff to use `127.0.0.1` from a phone.
+For same-Wi-Fi phone testing, start the single-app MVP with `APP_HOST=0.0.0.0 ./scripts/start_dev.sh` and use the printed `Phone URL` or the QR code shown on `/screen` and `/staff`. Open `/screen` by LAN URL for booth use so `/qr.svg` resolves to a phone-reachable host. Do not tell visitors or staff to use `127.0.0.1` from a phone.
 
 ## Architecture rules
 
@@ -111,6 +112,7 @@ Before marking a phase complete:
 - run unit tests;
 - run smoke tests;
 - confirm same-Wi-Fi phone mode starts with `APP_HOST=0.0.0.0` and prints a LAN `Phone URL`;
+- confirm `/qr.svg` works and the QR shown on `/screen` opens the visitor controller from a phone;
 - confirm reset works;
 - confirm fallback works;
 - confirm visitor data can be cleared;

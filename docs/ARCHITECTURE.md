@@ -9,6 +9,7 @@ Visitor phones  →  /              ┐
 Big screen      →  /screen        ├─ FastAPI local server on :3200
 Staff UI        →  /staff         │
 Votes           →  /api/vote      │
+Join QR         →  /qr.svg        │
 Live updates    →  /ws            ┘
 ```
 
@@ -23,6 +24,7 @@ The app should run without a model. Local SLM support is an optional layer added
 | Proposal engine | Deterministic template first, local SLM later |
 | Validation pipeline | Checks intent, schema, rules, evidence, and safety |
 | Renderer | Updates screen state from approved mission state |
+| QR renderer | Generates a local SVG join code for `/` on the request host |
 | Staff controls | Reset, fallback, mission select, clear state |
 | Replay mode | Prepared run for no-phone/no-model fallback |
 | Health endpoint | Basic readiness and status |
@@ -157,7 +159,7 @@ app/
 | Mode | Port |
 |---|---:|
 | Single local app | `3200` |
-| Split QR backend/WebSocket | `8200` |
+| Split QR backend/WebSocket, if needed later | `8200` |
 | Shared model adapter | `8600` |
 | Replay service | `8700` |
 | Health/status service | `8800` |
@@ -169,6 +171,7 @@ The application must remain demonstrable when:
 - local model runtime is unavailable;
 - Wi-Fi has no internet;
 - visitor phones cannot join;
+- QR scanning is unavailable;
 - WebSocket fails;
 - model output is malformed;
 - model output is slow.
@@ -180,3 +183,5 @@ Fallback order:
 3. staff-controlled mode;
 4. replay mode;
 5. static explainer screen.
+
+The QR route must not depend on an external QR service. It should generate a local SVG so the demo works on a private or offline booth network.

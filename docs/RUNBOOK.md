@@ -18,6 +18,8 @@ With the app running, verify routes:
 ./scripts/smoke_test.sh
 ```
 
+The smoke test includes `/qr.svg`, which should return a local SVG QR code for the visitor controller.
+
 ## Same-Wi-Fi phone startup
 
 For phone testing on the same Wi-Fi, the server must bind to all network interfaces:
@@ -35,6 +37,8 @@ Phone URL:  http://192.168.0.136:3200/
 
 Open the printed `Phone URL` on the phone. Do not use `127.0.0.1` on the phone.
 
+The QR code displayed on `/screen` and `/staff` points to the same visitor controller URL for the host used to load the page. For booth use, open `/screen` with the laptop LAN address, for example `http://192.168.0.136:3200/screen`, so the QR code resolves to a phone-reachable address.
+
 ## Rehearsal startup
 
 1. Boot the demo machine.
@@ -44,9 +48,9 @@ Open the printed `Phone URL` on the phone. Do not use `127.0.0.1` on the phone.
 5. Run `./scripts/check_ports.sh`.
 6. Start the app with `APP_HOST=0.0.0.0 ./scripts/start_dev.sh`.
 7. Confirm the console prints a `Phone URL` using the demo machine LAN address.
-8. Open `/screen` on the big display.
+8. Open `/screen` on the big display using the LAN host URL.
 9. Open `/staff` on staff machine/browser.
-10. Test `/` from iPhone and Android.
+10. Scan the `/screen` QR code from iPhone and Android.
 11. Run one mission round.
 12. Trigger reset.
 13. Trigger replay/fallback.
@@ -76,7 +80,8 @@ Use the staff page to:
 
 | Problem | First action | Fallback |
 |---|---|---|
-| Phone cannot join | Confirm app was started with `APP_HOST=0.0.0.0`, use printed `Phone URL`, check Wi-Fi/router isolation | Staff-controlled mode |
+| Phone cannot join | Confirm app was started with `APP_HOST=0.0.0.0`, use printed `Phone URL`, load `/screen` by LAN URL, check Wi-Fi/router isolation | Staff-controlled mode |
+| QR opens laptop-only URL | Reopen `/screen` using the LAN host, not `127.0.0.1` | Printed phone URL |
 | Phone joins but vote fails | Check `/health`, reload phone route | Replay mode |
 | Screen does not update | Refresh `/screen`, check WebSocket | Polling or replay |
 | Model times out | Disable model mode | Deterministic templates |

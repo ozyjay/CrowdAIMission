@@ -24,6 +24,31 @@ def test_static_routes_and_health_respond():
     }
 
 
+def test_qr_svg_points_to_visitor_controller_for_request_host():
+    client = TestClient(app, base_url="http://192.168.0.136:3200")
+
+    response = client.get("/qr.svg")
+
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("image/svg+xml")
+    assert response.headers["cache-control"] == "no-store"
+    assert "http://192.168.0.136:3200/" in response.text
+    assert "<svg" in response.text
+    assert response.text.index("<svg") < response.text.index("<title>")
+
+
+def test_screen_and_staff_expose_qr_code_for_mobile_joining():
+    client = TestClient(app)
+
+    screen = client.get("/screen").text
+    staff = client.get("/staff").text
+
+    assert 'src="/qr.svg"' in screen
+    assert "Scan to join" in screen
+    assert 'src="/qr.svg"' in staff
+    assert "Phone join" in staff
+
+
 def test_api_state_exposes_public_shape_only():
     client = TestClient(app)
 

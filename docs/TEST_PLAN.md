@@ -6,6 +6,7 @@
 |---|---|
 | Unit tests | Validate mission definitions, schemas, and rule checks |
 | Route tests | Confirm `/`, `/screen`, `/staff`, `/health`, `/replay` respond |
+| QR tests | Confirm `/qr.svg` renders a local join QR for the request host |
 | Voting tests | Confirm votes aggregate and rounds advance correctly |
 | WebSocket tests | Confirm screen updates after votes |
 | Mission tests | Confirm each mission has safe success and failure examples |
@@ -19,6 +20,8 @@
 - [ ] `/` opens on phone-sized screen.
 - [ ] Same-Wi-Fi phone testing uses `APP_HOST=0.0.0.0 ./scripts/start_dev.sh`.
 - [ ] Start script prints a `Phone URL` using the demo machine LAN address.
+- [ ] `/qr.svg` returns an SVG QR code for the visitor controller.
+- [ ] `/screen` and `/staff` display the join QR code.
 - [ ] `/screen` shows public mission state.
 - [ ] `/staff` can select mission, reset, and fallback.
 - [ ] `/health` returns healthy status.
@@ -33,6 +36,7 @@
 
 - [ ] Server is started with `APP_HOST=0.0.0.0` for phone rehearsal.
 - [ ] Phone uses the printed `Phone URL`, not `127.0.0.1`.
+- [ ] Big screen is opened with the LAN URL so the QR code is phone-reachable.
 - [ ] QR code opens on iPhone.
 - [ ] QR code opens on Android.
 - [ ] No login required.

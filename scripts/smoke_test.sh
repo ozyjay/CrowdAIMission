@@ -11,7 +11,7 @@ fi
 APP_PORT="${APP_PORT:-3200}"
 BASE_URL="http://127.0.0.1:${APP_PORT}"
 
-for path in / /screen /staff /health /replay; do
+for path in / /screen /staff /health /replay /qr.svg; do
   url="${BASE_URL}${path}"
   echo "Checking ${url}"
   if ! curl -fsS --max-time 2 "$url" >/dev/null; then

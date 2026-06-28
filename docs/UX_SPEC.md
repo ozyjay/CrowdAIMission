@@ -34,6 +34,7 @@ Scan. Vote. Check. Guide.
 | `/ws` | WebSocket | Push mission state to phones and screen |
 | `/health` | Staff/technical | Service status |
 | `/replay` | Big screen | Fallback/replay mode |
+| `/qr.svg` | Screen/staff asset | QR code for joining the visitor phone controller |
 
 ## Phone UX
 
@@ -77,6 +78,8 @@ Recommended layout:
 └────────────────────────────────────────────────────┘
 ```
 
+The QR code should be generated locally and point to `/` on the same host used to open `/screen`. In rehearsal, staff should open `/screen` with the demo machine LAN address so visitors scan a phone-reachable URL.
+
 ## Staff UX
 
 The staff UI should include:
@@ -93,6 +96,8 @@ The staff UI should include:
 - show health/status.
 
 Staff controls should be local-only or protected by booth network/physical controls.
+
+Staff UI should also show the same join QR code as the screen, so staff can test phone onboarding without using the big display.
 
 ## Round timing
 
