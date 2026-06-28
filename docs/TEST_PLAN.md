@@ -17,6 +17,8 @@
 
 - [ ] App starts on port `3200`.
 - [ ] `/` opens on phone-sized screen.
+- [ ] Same-Wi-Fi phone testing uses `APP_HOST=0.0.0.0 ./scripts/start_dev.sh`.
+- [ ] Start script prints a `Phone URL` using the demo machine LAN address.
 - [ ] `/screen` shows public mission state.
 - [ ] `/staff` can select mission, reset, and fallback.
 - [ ] `/health` returns healthy status.
@@ -29,6 +31,8 @@
 
 ## QR readiness gate
 
+- [ ] Server is started with `APP_HOST=0.0.0.0` for phone rehearsal.
+- [ ] Phone uses the printed `Phone URL`, not `127.0.0.1`.
 - [ ] QR code opens on iPhone.
 - [ ] QR code opens on Android.
 - [ ] No login required.
@@ -74,4 +78,5 @@ The demo is not Open Day ready until:
 - a non-developer can start it from cold boot;
 - QR onboarding passes rehearsal;
 - all active routes use the documented ports;
+- phone testing works from the documented `APP_HOST=0.0.0.0` startup path;
 - all mission content has been reviewed for safety and public wording.

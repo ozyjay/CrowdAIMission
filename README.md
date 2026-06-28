@@ -66,14 +66,22 @@ A Vite/React frontend can be added later if the UI becomes complex, but it is no
 
 ## Local setup
 
+Install dependencies and check the fixed demo ports:
+
 ```bash
 python3 -m pip install -r requirements.txt
-cp .env.example .env
 ./scripts/check_ports.sh
+```
+
+You do not need a `.env` file for normal local testing. Create one from `.env.example` only when you want persistent local overrides.
+
+For laptop-only testing, start the app with the default localhost binding:
+
+```bash
 ./scripts/start_dev.sh
 ```
 
-The MVP runs as a single FastAPI app on `127.0.0.1:3200` by default. After it starts, open:
+This runs the MVP as a single FastAPI app on `127.0.0.1:3200`. Only the laptop can reach this address. After it starts, open:
 
 - `http://127.0.0.1:3200/` for the visitor controller;
 - `http://127.0.0.1:3200/screen` for the big screen;
@@ -82,13 +90,28 @@ The MVP runs as a single FastAPI app on `127.0.0.1:3200` by default. After it st
 
 Run `python3 -m pytest -q` for automated tests and `./scripts/smoke_test.sh` while the app is running for route smoke tests.
 
-For phone testing on the same Wi-Fi, start the app on all network interfaces:
+### Same-Wi-Fi phone testing
+
+To test from a phone on the same Wi-Fi, start the app on all network interfaces:
 
 ```bash
 APP_HOST=0.0.0.0 ./scripts/start_dev.sh
 ```
 
-Then open `http://<this-machine-LAN-IP>:3200/` on the phone.
+The script prints a `Phone URL`, for example:
+
+```text
+Phone URL:  http://192.168.0.136:3200/
+```
+
+Open that exact URL on the phone. Do not use `127.0.0.1` on the phone; on a phone, `127.0.0.1` means the phone itself, not the laptop.
+
+If the phone cannot connect:
+
+- confirm the laptop and phone are on the same non-guest Wi-Fi network;
+- confirm any VPN, content filter, or router client-isolation setting is not blocking local traffic;
+- on macOS, allow the terminal app, Codex, or Python in Local Network / incoming connection prompts if asked;
+- confirm the console says `Starting Crowd AI Mission Control dev server on 0.0.0.0:3200.`
 
 ## Documentation map
 

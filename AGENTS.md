@@ -59,6 +59,8 @@ Use fixed ports.
 
 Do not silently fall back to random ports in Open Day mode.
 
+For same-Wi-Fi phone testing, start the single-app MVP with `APP_HOST=0.0.0.0 ./scripts/start_dev.sh` and use the printed `Phone URL`. Do not tell visitors or staff to use `127.0.0.1` from a phone.
+
 ## Architecture rules
 
 - The local SLM may propose content but must not directly control state, routes, files, network, or public output.
@@ -108,6 +110,7 @@ Before marking a phase complete:
 - run port checks;
 - run unit tests;
 - run smoke tests;
+- confirm same-Wi-Fi phone mode starts with `APP_HOST=0.0.0.0` and prints a LAN `Phone URL`;
 - confirm reset works;
 - confirm fallback works;
 - confirm visitor data can be cleared;

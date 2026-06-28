@@ -4,12 +4,13 @@
 
 ```bash
 python3 -m pip install -r requirements.txt
-cp .env.example .env
 ./scripts/check_ports.sh
 ./scripts/start_dev.sh
 ```
 
-The start script launches the local FastAPI server on port `3200` unless `APP_HOST` or `APP_PORT` are deliberately changed in `.env`.
+The start script launches the local FastAPI server on `127.0.0.1:3200` by default. This is laptop-only mode; it is good for route checks from the demo machine, but phones cannot reach `127.0.0.1` on the laptop.
+
+A `.env` file is optional. Use one only when you want persistent local overrides. One-off command-line values such as `APP_HOST=0.0.0.0` are preferred for rehearsal checks.
 
 With the app running, verify routes:
 
@@ -17,13 +18,22 @@ With the app running, verify routes:
 ./scripts/smoke_test.sh
 ```
 
-For phone testing on the same Wi-Fi, start the app with:
+## Same-Wi-Fi phone startup
+
+For phone testing on the same Wi-Fi, the server must bind to all network interfaces:
 
 ```bash
 APP_HOST=0.0.0.0 ./scripts/start_dev.sh
 ```
 
-Then open the visitor controller on the phone using the demo machine LAN address, for example `http://192.168.0.136:3200/`.
+The script prints the local laptop URL and the phone URL:
+
+```text
+Laptop URL: http://127.0.0.1:3200/
+Phone URL:  http://192.168.0.136:3200/
+```
+
+Open the printed `Phone URL` on the phone. Do not use `127.0.0.1` on the phone.
 
 ## Rehearsal startup
 
@@ -31,9 +41,9 @@ Then open the visitor controller on the phone using the demo machine LAN address
 2. Confirm display and power settings.
 3. Confirm local network/router path.
 4. Confirm the machine IP address.
-5. Update `PUBLIC_DEMO_URL` in `.env` if needed.
-6. Run `./scripts/check_ports.sh`.
-7. Start the app.
+5. Run `./scripts/check_ports.sh`.
+6. Start the app with `APP_HOST=0.0.0.0 ./scripts/start_dev.sh`.
+7. Confirm the console prints a `Phone URL` using the demo machine LAN address.
 8. Open `/screen` on the big display.
 9. Open `/staff` on staff machine/browser.
 10. Test `/` from iPhone and Android.
@@ -66,7 +76,7 @@ Use the staff page to:
 
 | Problem | First action | Fallback |
 |---|---|---|
-| Phone cannot join | Check URL/IP and router | Staff-controlled mode |
+| Phone cannot join | Confirm app was started with `APP_HOST=0.0.0.0`, use printed `Phone URL`, check Wi-Fi/router isolation | Staff-controlled mode |
 | Phone joins but vote fails | Check `/health`, reload phone route | Replay mode |
 | Screen does not update | Refresh `/screen`, check WebSocket | Polling or replay |
 | Model times out | Disable model mode | Deterministic templates |
