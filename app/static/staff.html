@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en-AU">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Staff Controls</title>
+    <link rel="stylesheet" href="/static/styles.css">
+  </head>
+  <body class="staff">
+    <main class="staff-shell">
+      <p class="eyebrow">Staff Controls</p>
+      <h1 id="mission-title">Crowd AI Mission Control</h1>
+      <p id="mission-phase" class="status-pill">Loading</p>
+      <section class="panel">
+        <h2>Mission</h2>
+        <div class="toolbar">
+          <button data-staff-select="game_studio">Game Studio</button>
+          <button data-staff-select="truth_check">Truth Check</button>
+        </div>
+      </section>
+      <section class="panel">
+        <h2>Round Controls</h2>
+        <div class="toolbar">
+          <button data-staff-action="/api/staff/advance">Advance</button>
+          <button data-staff-action="/api/staff/reset">Reset / clear votes</button>
+          <button data-staff-action="/api/staff/fallback">Fallback</button>
+        </div>
+      </section>
+      <section class="panel">
+        <h2 id="question">Current state</h2>
+        <div id="choices" class="vote-board"></div>
+        <p id="proposal" class="lead"></p>
+        <div id="checks" class="check-grid"></div>
+        <p id="fallback" class="fallback-copy"></p>
+      </section>
+    </main>
+    <script src="/static/app.js" defer></script>
+  </body>
+</html>

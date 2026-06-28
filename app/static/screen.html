@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en-AU">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Humans in the Loop</title>
+    <link rel="stylesheet" href="/static/styles.css">
+  </head>
+  <body class="screen">
+    <main class="screen-grid">
+      <header class="screen-header">
+        <p class="eyebrow">Humans in the Loop</p>
+        <h1>Can the crowd keep a local AI on track?</h1>
+      </header>
+      <section class="mission-visual">
+        <p class="status-pill" id="mission-phase">Loading</p>
+        <h2 id="mission-title">Crowd AI Mission Control</h2>
+        <p id="question" class="lead">Scan. Vote. Check. Guide.</p>
+        <div id="choices" class="vote-board"></div>
+      </section>
+      <section class="pipeline">
+        <h2>Control Pipeline</h2>
+        <ol>
+          <li id="step-goal">People set the goal</li>
+          <li id="step-rule">People set the rule</li>
+          <li id="step-proposal">Local AI proposed</li>
+          <li id="step-checks">Software checked</li>
+          <li id="step-decision">Crowd decided</li>
+          <li id="step-updated">Mission updated</li>
+        </ol>
+      </section>
+      <section class="proposal-band">
+        <h2>Controlled Demo Proposal</h2>
+        <p id="proposal">Waiting for the crowd to set direction.</p>
+        <div id="checks" class="check-grid"></div>
+        <p id="fallback" class="fallback-copy"></p>
+      </section>
+    </main>
+    <script src="/static/app.js" defer></script>
+  </body>
+</html>

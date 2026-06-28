@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+
+# Node
+node_modules/
+dist/
+build/
+
+# Local outputs
+logs/
+.tmp/
+coverage/
+.DS_Store
+
+# VS Code local-only state
+.vscode/*.log
