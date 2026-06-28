@@ -23,4 +23,6 @@ def test_powershell_scripts_mirror_fixed_ports_and_routes():
     assert "APP_HOST" in start_dev
     assert "0.0.0.0" in start_dev
     assert "Phone URL" in start_dev
+    assert "PYTHON_BIN" in start_dev
+    assert "pyenv" in start_dev
     assert "python3" in start_dev

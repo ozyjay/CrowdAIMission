@@ -20,6 +20,12 @@ The start script launches the local FastAPI server on `127.0.0.1:3200` by defaul
 
 A `.env` file is optional. Use one only when you want persistent local overrides. One-off command-line values such as `APP_HOST=0.0.0.0` are preferred for rehearsal checks.
 
+If startup uses Xcode Python and fails with `No module named uvicorn`, pin the interpreter in `.env`:
+
+```text
+PYTHON_BIN=/Users/cpjjh/.pyenv/versions/3.12.13/bin/python3
+```
+
 With the app running, verify routes:
 
 ```bash

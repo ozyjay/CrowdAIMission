@@ -102,6 +102,7 @@ Current mission deck:
 - Prefer boring, reliable dependencies.
 - Prefer server-owned state over client-owned authority.
 - Use environment variables for ports and hosts.
+- Use `PYTHON_BIN` when needed to avoid accidentally running Xcode/system Python instead of the active pyenv Python.
 - Include tests for every new mission and every new model-output schema.
 - Add or update docs when behaviour changes.
 - Avoid large rewrites unless explicitly requested.

@@ -83,6 +83,12 @@ pwsh -NoProfile -File scripts/check_ports.ps1
 
 You do not need a `.env` file for normal local testing. Create one from `.env.example` only when you want persistent local overrides.
 
+On macOS, some shells resolve `python3` to Xcode Python, which usually does not have this project’s packages. If startup prints a Python path under `/Applications/Xcode.app/...` and fails with `No module named uvicorn`, set `PYTHON_BIN` in `.env` to your pyenv interpreter, for example:
+
+```text
+PYTHON_BIN=/Users/cpjjh/.pyenv/versions/3.12.13/bin/python3
+```
+
 For laptop-only testing, start the app with the default localhost binding:
 
 ```bash

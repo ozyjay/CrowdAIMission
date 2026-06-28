@@ -3,6 +3,7 @@ $ErrorActionPreference = "Stop"
 $EnvAppHost = $env:APP_HOST
 $EnvAppPort = $env:APP_PORT
 $EnvAppReload = $env:APP_RELOAD
+$EnvPythonBin = $env:PYTHON_BIN
 
 function Import-DotEnv {
     param([string] $Path)
@@ -50,6 +51,30 @@ function Get-LanIp {
     return $Address
 }
 
+function Resolve-PythonBin {
+    if ($env:PYTHON_BIN) {
+        return $env:PYTHON_BIN
+    }
+
+    if (Test-Path ".venv/bin/python3") {
+        return ".venv/bin/python3"
+    }
+
+    if (Test-Path ".venv/Scripts/python.exe") {
+        return ".venv/Scripts/python.exe"
+    }
+
+    $Pyenv = Get-Command pyenv -ErrorAction SilentlyContinue
+    if ($Pyenv) {
+        $PyenvPython = (& pyenv which python3 2>$null)
+        if ($PyenvPython) {
+            return $PyenvPython.Trim()
+        }
+    }
+
+    return "python3"
+}
+
 Import-DotEnv ".env"
 
 if ($EnvAppHost) {
@@ -60,6 +85,9 @@ if ($EnvAppPort) {
 }
 if ($EnvAppReload) {
     $env:APP_RELOAD = $EnvAppReload
+}
+if ($EnvPythonBin) {
+    $env:PYTHON_BIN = $EnvPythonBin
 }
 
 if (-not $env:APP_PORT) {
@@ -73,8 +101,10 @@ if (-not $env:APP_RELOAD) {
 }
 
 $LanIp = Get-LanIp
+$PythonBin = Resolve-PythonBin
 
 Write-Host "Starting Crowd AI Mission Control dev server on $($env:APP_HOST):$($env:APP_PORT)."
+Write-Host "Python: $PythonBin"
 Write-Host "Laptop URL: http://127.0.0.1:$($env:APP_PORT)/"
 if ($env:APP_HOST -eq "0.0.0.0" -or ($LanIp -and $env:APP_HOST -eq $LanIp)) {
     if ($LanIp) {
@@ -88,9 +118,17 @@ else {
     Write-Host "Phone URL:  unavailable while APP_HOST=$($env:APP_HOST); use APP_HOST=0.0.0.0 for same-Wi-Fi phone testing."
 }
 
+$DependencyCheck = & $PythonBin -c "import uvicorn" 2>$null
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "Missing Python dependency: uvicorn."
+    Write-Host "Install dependencies with: $PythonBin -m pip install -r requirements.txt"
+    Write-Host "If this picked the wrong Python, set `$env:PYTHON_BIN = `"/path/to/python3`" before running this script."
+    exit 1
+}
+
 $Arguments = @("-m", "uvicorn", "app.main:app", "--host", $env:APP_HOST, "--port", $env:APP_PORT)
 if ($env:APP_RELOAD -eq "true") {
     $Arguments += "--reload"
 }
 
-& python3 @Arguments
+& $PythonBin @Arguments
