@@ -13,12 +13,13 @@ BASE_URL="http://127.0.0.1:${APP_PORT}"
 
 required_paths=(
   "/"
+  "/ping"
   "/screen"
   "/staff"
   "/health"
   "/replay"
   "/api/state"
-  "/api/missions"
+  "/qr.svg"
 )
 
 for path in "${required_paths[@]}"; do

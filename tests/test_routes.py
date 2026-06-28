@@ -10,9 +10,13 @@ def setup_function():
 def test_static_routes_and_health_respond():
     client = TestClient(app)
 
-    for path in ["/", "/screen", "/staff", "/health", "/replay"]:
+    for path in ["/", "/screen", "/staff", "/health", "/replay", "/ping"]:
         response = client.get(path)
         assert response.status_code == 200
+
+    ping = client.get("/ping")
+    assert ping.text == "pong\n"
+    assert ping.headers["content-type"].startswith("text/plain")
 
     health = client.get("/health").json()
     assert health == {
@@ -25,16 +29,51 @@ def test_static_routes_and_health_respond():
 
 
 def test_qr_svg_points_to_visitor_controller_for_request_host():
-    client = TestClient(app, base_url="http://192.168.0.136:3200")
+    client = TestClient(app, base_url="http://demo-laptop.local:3200")
 
     response = client.get("/qr.svg")
 
     assert response.status_code == 200
     assert response.headers["content-type"].startswith("image/svg+xml")
     assert response.headers["cache-control"] == "no-store"
-    assert "http://192.168.0.136:3200/" in response.text
+    assert "http://demo-laptop.local:3200/" in response.text
     assert "<svg" in response.text
     assert response.text.index("<svg") < response.text.index("<title>")
+
+
+def test_qr_svg_rewrites_localhost_to_lan_host_for_phone_joining(monkeypatch):
+    monkeypatch.setenv("APP_HOST", "0.0.0.0")
+    monkeypatch.setenv("APP_PORT", "3200")
+    monkeypatch.setattr("app.main.detect_lan_ip", lambda: "192.0.2.44")
+    client = TestClient(app, base_url="http://localhost:3200")
+
+    response = client.get("/qr.svg")
+
+    assert response.status_code == 200
+    assert "http://192.0.2.44:3200/" in response.text
+    assert "http://localhost:3200/" not in response.text
+
+
+def test_qr_svg_keeps_localhost_when_app_is_local_only(monkeypatch):
+    monkeypatch.setenv("APP_HOST", "127.0.0.1")
+    monkeypatch.setattr("app.main.detect_lan_ip", lambda: "192.0.2.44")
+    client = TestClient(app, base_url="http://localhost:3200")
+
+    response = client.get("/qr.svg")
+
+    assert response.status_code == 200
+    assert "http://localhost:3200/" in response.text
+
+
+def test_join_url_api_matches_phone_reachable_qr_url(monkeypatch):
+    monkeypatch.setenv("APP_HOST", "0.0.0.0")
+    monkeypatch.setattr("app.main.detect_lan_ip", lambda: "192.0.2.44")
+    client = TestClient(app, base_url="http://localhost:3200")
+
+    response = client.get("/api/join-url")
+
+    assert response.status_code == 200
+    assert response.json() == {"url": "http://192.0.2.44:3200/"}
 
 
 def test_screen_and_staff_expose_qr_code_for_mobile_joining():
@@ -45,8 +84,10 @@ def test_screen_and_staff_expose_qr_code_for_mobile_joining():
 
     assert 'src="/qr.svg"' in screen
     assert "Scan to join" in screen
+    assert 'id="join-url"' in screen
     assert 'src="/qr.svg"' in staff
     assert "Phone join" in staff
+    assert 'id="join-url"' in staff
 
 
 def test_api_state_exposes_public_shape_only():

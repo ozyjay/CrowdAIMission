@@ -17,7 +17,7 @@ For local-only desktop testing:
 ```env
 APP_HOST=127.0.0.1
 APP_PORT=3200
-PUBLIC_DEMO_URL=http://127.0.0.1:3200
+PUBLIC_DEMO_URL=
 ```
 
 For phone testing on the same local network:
@@ -25,8 +25,10 @@ For phone testing on the same local network:
 ```env
 APP_HOST=0.0.0.0
 APP_PORT=3200
-PUBLIC_DEMO_URL=http://<your-lan-ip>:3200
+PUBLIC_DEMO_URL=
 ```
+
+Do not hardcode the LAN URL in `.env` for normal demos. The start script prints the current `Phone URL`. When `APP_HOST=0.0.0.0`, the QR code rewrites localhost to the laptop LAN address so phones do not try to open `localhost`.
 
 ### 2. Check ports
 
@@ -52,7 +54,7 @@ http://127.0.0.1:3200/staff
 Phone:
 
 ```text
-http://<your-lan-ip>:3200/
+Use the Phone URL printed by the start script.
 ```
 
 ### 5. Smoke test
@@ -110,7 +112,7 @@ If using deterministic proposals in MVP 0.2, say internally or in dev demos:
 
 | Problem | First action | Fallback |
 |---|---|---|
-| Phone cannot open URL | Check LAN IP and firewall | Use `/replay` |
+| Phone cannot open URL | Open `http://<phone-url-host>:3200/ping` on the phone. If it does not show `pong`, check Wi-Fi, guest network/client isolation, VPN, and firewall. | Use `/replay` |
 | Phone opens but vote fails | Check `/api/state` and `/api/vote` | Use staff-controlled round |
 | Screen does not update | Refresh `/screen`; check WebSocket/polling | Use `/replay` |
 | Staff route broken | Restart app when visitor flow allows | Use static replay route |

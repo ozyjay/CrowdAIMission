@@ -134,7 +134,23 @@ function bindStaffControls() {
   }
 }
 
+async function refreshJoinUrl() {
+  const joinUrlNode = qs("join-url");
+  const qrCode = document.querySelector(".qr-code");
+  if (!joinUrlNode && !qrCode) return;
+
+  try {
+    const response = await fetch("/api/join-url", { cache: "no-store" });
+    const data = await response.json();
+    if (joinUrlNode) joinUrlNode.textContent = data.url;
+    if (qrCode) qrCode.src = `/qr.svg?t=${Date.now()}`;
+  } catch (error) {
+    if (joinUrlNode) joinUrlNode.textContent = "Join URL unavailable";
+  }
+}
+
 bindStaffControls();
+refreshJoinUrl();
 pollState();
 connectWebSocket();
 setInterval(() => {

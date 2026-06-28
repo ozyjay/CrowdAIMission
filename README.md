@@ -106,11 +106,13 @@ In a separate terminal:
 ./scripts/smoke_test.sh
 ```
 
-For phone testing on a local network, set `VISITOR_HOST=0.0.0.0` and set `PUBLIC_DEMO_URL` to the machine’s LAN IP, for example:
+For phone testing on a local network, bind the app to all interfaces:
 
-```env
-PUBLIC_DEMO_URL=http://192.168.1.50:3200
+```bash
+APP_HOST=0.0.0.0 ./scripts/start_dev.sh
 ```
+
+The script prints the current `Phone URL`. Open that URL on the phone, or scan the QR code on `/screen` or `/staff`. When `APP_HOST=0.0.0.0`, the QR code rewrites localhost to the laptop LAN address so phones do not try to open `localhost`. Do not hardcode `PUBLIC_DEMO_URL` for normal local demos.
 
 ## Documentation map
 

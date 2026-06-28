@@ -204,6 +204,14 @@ p {
   width: min(34vw, 220px);
 }
 
+.join-url {
+  color: var(--ink);
+  font-size: clamp(1rem, 2vw, 1.35rem);
+  font-weight: 800;
+  line-break: anywhere;
+  margin-bottom: 0;
+}
+
 .check-grid {
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
 }
