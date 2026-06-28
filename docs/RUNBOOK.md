@@ -8,6 +8,14 @@ python3 -m pip install -r requirements.txt
 ./scripts/start_dev.sh
 ```
 
+PowerShell:
+
+```powershell
+python3 -m pip install -r requirements.txt
+pwsh -NoProfile -File scripts/check_ports.ps1
+pwsh -NoProfile -File scripts/start_dev.ps1
+```
+
 The start script launches the local FastAPI server on `127.0.0.1:3200` by default. This is laptop-only mode; it is good for route checks from the demo machine, but phones cannot reach `127.0.0.1` on the laptop.
 
 A `.env` file is optional. Use one only when you want persistent local overrides. One-off command-line values such as `APP_HOST=0.0.0.0` are preferred for rehearsal checks.
@@ -18,6 +26,12 @@ With the app running, verify routes:
 ./scripts/smoke_test.sh
 ```
 
+PowerShell:
+
+```powershell
+pwsh -NoProfile -File scripts/smoke_test.ps1
+```
+
 The smoke test includes `/qr.svg`, which should return a local SVG QR code for the visitor controller.
 
 ## Same-Wi-Fi phone startup
@@ -26,6 +40,13 @@ For phone testing on the same Wi-Fi, the server must bind to all network interfa
 
 ```bash
 APP_HOST=0.0.0.0 ./scripts/start_dev.sh
+```
+
+PowerShell:
+
+```powershell
+$env:APP_HOST = "0.0.0.0"
+pwsh -NoProfile -File scripts/start_dev.ps1
 ```
 
 The script prints the local laptop URL and the phone URL:
@@ -45,8 +66,8 @@ The QR code displayed on `/screen` and `/staff` points to the same visitor contr
 2. Confirm display and power settings.
 3. Confirm local network/router path.
 4. Confirm the machine IP address.
-5. Run `./scripts/check_ports.sh`.
-6. Start the app with `APP_HOST=0.0.0.0 ./scripts/start_dev.sh`.
+5. Run `./scripts/check_ports.sh` or `pwsh -NoProfile -File scripts/check_ports.ps1`.
+6. Start the app with `APP_HOST=0.0.0.0 ./scripts/start_dev.sh`, or set `$env:APP_HOST = "0.0.0.0"` before `pwsh -NoProfile -File scripts/start_dev.ps1`.
 7. Confirm the console prints a `Phone URL` using the demo machine LAN address.
 8. Open `/screen` on the big display using the LAN host URL.
 9. Open `/staff` on staff machine/browser.

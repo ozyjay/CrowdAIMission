@@ -62,6 +62,8 @@ Do not silently fall back to random ports in Open Day mode.
 
 For same-Wi-Fi phone testing, start the single-app MVP with `APP_HOST=0.0.0.0 ./scripts/start_dev.sh` and use the printed `Phone URL` or the QR code shown on `/screen` and `/staff`. Open `/screen` by LAN URL for booth use so `/qr.svg` resolves to a phone-reachable host. Do not tell visitors or staff to use `127.0.0.1` from a phone.
 
+PowerShell equivalents must be kept in sync with Bash scripts: `scripts/check_ports.ps1`, `scripts/start_dev.ps1`, and `scripts/smoke_test.ps1`.
+
 ## Architecture rules
 
 - The local SLM may propose content but must not directly control state, routes, files, network, or public output.
@@ -111,6 +113,7 @@ Before marking a phase complete:
 - run port checks;
 - run unit tests;
 - run smoke tests;
+- when scripts change, verify both Bash and PowerShell variants where possible;
 - confirm same-Wi-Fi phone mode starts with `APP_HOST=0.0.0.0` and prints a LAN `Phone URL`;
 - confirm `/qr.svg` works and the QR shown on `/screen` opens the visitor controller from a phone;
 - confirm reset works;

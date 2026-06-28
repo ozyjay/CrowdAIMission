@@ -74,12 +74,25 @@ python3 -m pip install -r requirements.txt
 ./scripts/check_ports.sh
 ```
 
+PowerShell:
+
+```powershell
+python3 -m pip install -r requirements.txt
+pwsh -NoProfile -File scripts/check_ports.ps1
+```
+
 You do not need a `.env` file for normal local testing. Create one from `.env.example` only when you want persistent local overrides.
 
 For laptop-only testing, start the app with the default localhost binding:
 
 ```bash
 ./scripts/start_dev.sh
+```
+
+PowerShell:
+
+```powershell
+pwsh -NoProfile -File scripts/start_dev.ps1
 ```
 
 This runs the MVP as a single FastAPI app on `127.0.0.1:3200`. Only the laptop can reach this address. After it starts, open:
@@ -89,7 +102,7 @@ This runs the MVP as a single FastAPI app on `127.0.0.1:3200`. Only the laptop c
 - `http://127.0.0.1:3200/staff` for staff controls;
 - `http://127.0.0.1:3200/replay` for fallback/replay mode.
 
-Run `python3 -m pytest -q` for automated tests and `./scripts/smoke_test.sh` while the app is running for route smoke tests.
+Run `python3 -m pytest -q` for automated tests and `./scripts/smoke_test.sh` while the app is running for route smoke tests. In PowerShell, run `pwsh -NoProfile -File scripts/smoke_test.ps1`.
 
 ### Same-Wi-Fi phone testing
 
@@ -97,6 +110,13 @@ To test from a phone on the same Wi-Fi, start the app on all network interfaces:
 
 ```bash
 APP_HOST=0.0.0.0 ./scripts/start_dev.sh
+```
+
+PowerShell:
+
+```powershell
+$env:APP_HOST = "0.0.0.0"
+pwsh -NoProfile -File scripts/start_dev.ps1
 ```
 
 The script prints a `Phone URL`, for example:
