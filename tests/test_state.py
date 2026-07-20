@@ -18,8 +18,10 @@ def test_initial_public_state_matches_goal_vote_contract():
     assert public["choices"]
     assert public["votes"] == {}
     assert public["winning_choices"] == {}
+    assert public["selections"] == {"goal": None, "rule": None, "decision": None}
     assert public["proposal"] is None
     assert public["checks"] == {}
+    assert public["result"] is None
     assert public["fallback_message"] is None
 
 
@@ -82,6 +84,10 @@ def test_advance_reveals_proposal_checks_and_result():
     result_state = state.public_state()
     assert result_state["phase"] == "result"
     assert result_state["winning_choices"]["check"] == "spoiled_answer"
+    assert result_state["selections"]["goal"]["label"] == "Help the player escape"
+    assert result_state["selections"]["rule"]["label"] == "Do not give away the answer"
+    assert result_state["selections"]["decision"]["label"] == "Spoiled the answer"
+    assert "Spoiled the answer" in result_state["result"]["message"]
 
 
 def test_reset_clears_votes_and_returns_to_goal_vote():
@@ -106,10 +112,39 @@ def test_fallback_sets_public_replay_copy():
     public = state.public_state()
     assert public["phase"] == "fallback"
     assert public["mode"] == "fallback"
+    assert public["selections"]["goal"] is not None
+    assert public["selections"]["rule"] is not None
+    assert public["selections"]["decision"] is not None
+    assert public["result"]["message"] == state.mission.fallback_response
     assert public["fallback_message"] == (
         "Live mode unavailable. Showing a prepared mission run. "
         "It shows the same idea in a reliable way."
     )
+
+
+def test_mode_switch_supports_replay_and_live():
+    state = DemoState()
+
+    replay = state.set_mode("replay")
+    assert replay["phase"] == "replay"
+    assert replay["mode"] == "replay"
+    assert "prepared mission run" in replay["fallback_message"].lower()
+
+    live = state.set_mode("live")
+    assert live["phase"] == "goal_vote"
+    assert live["mode"] == "live"
+
+
+def test_clear_votes_preserves_round_phase_and_mode():
+    state = DemoState()
+    state.submit_vote("goal", "help_player_escape")
+
+    public = state.clear_votes()
+
+    assert public["phase"] == "goal_vote"
+    assert public["mode"] == "live"
+    assert public["votes"] == {}
+    assert public["winning_choices"] == {}
 
 
 def test_select_mission_resets_state_to_selected_mission():

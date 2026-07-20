@@ -35,6 +35,14 @@ class MissionSelectRequest(BaseModel):
     mission_id: str
 
 
+class ModeRequest(BaseModel):
+    mode: str
+
+
+class ResetRequest(BaseModel):
+    scope: str = "round"
+
+
 class ConnectionManager:
     def __init__(self) -> None:
         self._connections: dict[WebSocket, asyncio.Queue[dict[str, object]]] = {}
@@ -148,6 +156,21 @@ async def api_state() -> dict[str, object]:
     return demo_state.public_state()
 
 
+@app.get("/api/missions")
+async def api_missions() -> dict[str, object]:
+    return {
+        "missions": [
+            {
+                "id": mission.id,
+                "title": mission.title,
+                "hook": mission.hook,
+                "enabled": True,
+            }
+            for mission in MISSIONS.values()
+        ]
+    }
+
+
 @app.get("/api/join-url")
 async def api_join_url(request: Request) -> dict[str, str]:
     return {"url": visitor_join_url(request)}
@@ -163,6 +186,7 @@ async def vote(request: VoteRequest) -> dict[str, object]:
     return state
 
 
+@app.post("/api/staff/mission")
 @app.post("/api/staff/select-mission")
 async def select_mission(request: MissionSelectRequest) -> dict[str, object]:
     try:
@@ -181,8 +205,18 @@ async def advance() -> dict[str, object]:
 
 
 @app.post("/api/staff/reset")
-async def reset() -> dict[str, object]:
-    state = demo_state.reset()
+async def reset(request: ResetRequest | None = None) -> dict[str, object]:
+    try:
+        state = demo_state.reset(request.scope if request else "round")
+    except VoteRejected as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    await manager.broadcast(state)
+    return state
+
+
+@app.post("/api/staff/clear-votes")
+async def clear_votes() -> dict[str, object]:
+    state = demo_state.clear_votes()
     await manager.broadcast(state)
     return state
 
@@ -190,6 +224,16 @@ async def reset() -> dict[str, object]:
 @app.post("/api/staff/fallback")
 async def fallback() -> dict[str, object]:
     state = demo_state.fallback()
+    await manager.broadcast(state)
+    return state
+
+
+@app.post("/api/staff/mode")
+async def mode(request: ModeRequest) -> dict[str, object]:
+    try:
+        state = demo_state.set_mode(request.mode)
+    except VoteRejected as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
     await manager.broadcast(state)
     return state
 

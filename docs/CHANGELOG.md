@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-07-20
+
+- Added the missions API and contract-compatible staff mission route.
+- Added explicit live, fallback, and replay mode controls plus separate vote,
+  round, and session clearing controls.
+- Made winning goal, rule, crowd decision, and result content visible on the
+  screen and staff views.
+- Added route and state tests; 27 automated tests and the fixed-port route smoke
+  test pass locally.
+
 ## 2026-06-28 — MVP 0.2 documentation update
 
 ### Added

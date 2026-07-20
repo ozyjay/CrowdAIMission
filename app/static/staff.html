@@ -22,8 +22,17 @@
         <h2>Round Controls</h2>
         <div class="toolbar">
           <button data-staff-action="/api/staff/advance">Advance</button>
-          <button data-staff-action="/api/staff/reset">Reset / clear votes</button>
-          <button data-staff-action="/api/staff/fallback">Fallback</button>
+          <button data-staff-action="/api/staff/clear-votes">Clear votes</button>
+          <button data-staff-reset="round">Reset round</button>
+          <button data-staff-reset="session">Clear session</button>
+        </div>
+      </section>
+      <section class="panel">
+        <h2>Mode</h2>
+        <div class="toolbar">
+          <button data-staff-mode="live">Live</button>
+          <button data-staff-mode="fallback">Fallback</button>
+          <button data-staff-mode="replay">Replay</button>
         </div>
       </section>
       <section class="panel join-panel">
@@ -36,6 +45,12 @@
       </section>
       <section class="panel">
         <h2 id="question">Current state</h2>
+        <div class="round-summary">
+          <div><span>Goal</span><strong id="selected-goal">Waiting</strong></div>
+          <div><span>Rule</span><strong id="selected-rule">Waiting</strong></div>
+          <div><span>Decision</span><strong id="selected-decision">Waiting</strong></div>
+          <div><span>Result</span><strong id="result">Waiting</strong></div>
+        </div>
         <div id="choices" class="vote-board"></div>
         <p id="proposal" class="lead"></p>
         <div id="checks" class="check-grid"></div>

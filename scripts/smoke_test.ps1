@@ -23,7 +23,17 @@ if ($EnvAppPort) { $env:APP_PORT = $EnvAppPort }
 if (-not $env:APP_PORT) { $env:APP_PORT = "3200" }
 
 $BaseUrl = "http://127.0.0.1:$($env:APP_PORT)"
-$Paths = @("/", "/ping", "/screen", "/staff", "/health", "/replay", "/api/state", "/qr.svg")
+$Paths = @(
+    "/",
+    "/ping",
+    "/screen",
+    "/staff",
+    "/health",
+    "/replay",
+    "/api/state",
+    "/api/missions",
+    "/qr.svg"
+)
 
 foreach ($Path in $Paths) {
     $Url = "$BaseUrl$Path"

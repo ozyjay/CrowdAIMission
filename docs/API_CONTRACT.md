@@ -164,6 +164,20 @@ Allowed modes:
 - `fallback`
 - `replay`
 
+Switching to fallback or replay also selects the corresponding server-owned
+phase. Switching back to live opens the goal vote.
+
+## POST `/api/staff/clear-votes`
+
+Clears all vote counts and winning choices without changing the active mission,
+phase, mode, or round number.
+
+Request:
+
+```json
+{}
+```
+
 ## POST `/api/staff/advance`
 
 Manually advances to next phase.

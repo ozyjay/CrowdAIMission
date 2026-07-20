@@ -11,6 +11,7 @@ const pipelineOrder = {
   check_vote: ["step-goal", "step-rule", "step-proposal", "step-checks"],
   result: ["step-goal", "step-rule", "step-proposal", "step-checks", "step-decision", "step-updated"],
   fallback: ["step-goal", "step-rule", "step-proposal", "step-checks", "step-decision", "step-updated"],
+  replay: ["step-goal", "step-rule", "step-proposal", "step-checks", "step-decision", "step-updated"],
 };
 
 let latestState = null;
@@ -48,8 +49,17 @@ function render(state) {
   const proposal = state.proposal ? state.proposal.caption : "Waiting for the crowd to set direction.";
   setText("proposal", proposal);
   renderChoices(state);
+  renderSelections(state);
   renderChecks(state);
   renderPipeline(state);
+}
+
+function renderSelections(state) {
+  const selections = state.selections || {};
+  setText("selected-goal", selections.goal ? selections.goal.label : "Waiting for the goal vote");
+  setText("selected-rule", selections.rule ? selections.rule.label : "Waiting for the rule vote");
+  setText("selected-decision", selections.decision ? selections.decision.label : "Waiting for the crowd decision");
+  setText("result", state.result ? state.result.message : "Waiting for the round result");
 }
 
 function renderChoices(state) {
@@ -130,6 +140,16 @@ function bindStaffControls() {
   for (const button of document.querySelectorAll("[data-staff-select]")) {
     button.addEventListener("click", () => {
       postJson("/api/staff/select-mission", { mission_id: button.dataset.staffSelect });
+    });
+  }
+  for (const button of document.querySelectorAll("[data-staff-mode]")) {
+    button.addEventListener("click", () => {
+      postJson("/api/staff/mode", { mode: button.dataset.staffMode });
+    });
+  }
+  for (const button of document.querySelectorAll("[data-staff-reset]")) {
+    button.addEventListener("click", () => {
+      postJson("/api/staff/reset", { scope: button.dataset.staffReset });
     });
   }
 }

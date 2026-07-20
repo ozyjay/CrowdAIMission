@@ -29,6 +29,23 @@ The MVP is not Open Day ready yet. The following remain unproven:
 - 60-minute or 2–3 hour burn-in;
 - no-phone replay/fallback mode tested under crowd conditions.
 
+## MVP 0.2 implementation progress
+
+Implemented and locally verified on 20 July 2026:
+
+- server-owned goal, rule, and crowd-decision voting;
+- WebSocket state broadcasts with polling fallback;
+- `/api/missions` and the required public routes on fixed port `3200`;
+- separate staff controls for advance, clear votes, round reset, session clear,
+  fallback, replay, and return to live mode;
+- visible goal, rule, decision, and result summaries on `/screen` and `/staff`;
+- deterministic Game Studio and Truth Check mission packs;
+- 27 automated tests passing;
+- shell smoke test passing for the MVP 0.2 GET route set.
+
+This is local software verification only. The device, display, network, operator,
+and burn-in proof points below still require manual testing.
+
 ## MVP 0.2 target
 
 MVP 0.2 should add the first meaningful interaction loop without a live AI dependency:
@@ -44,11 +61,12 @@ The local-AI proposal is deterministic in this phase.
 | Phase | Status | Notes |
 |---|---|---|
 | MVP 0.1 — route / LAN smoke test | Passed | Phone connected to local Mac-hosted app |
-| MVP 0.2 — real round loop | Next | Build voting, state, screen, staff reset, replay |
+| MVP 0.2 — real round loop | In progress | Core loop and controls implemented; third mission and physical rehearsal remain |
 | MVP 0.3 — mission deck hardening | Not started | Add more missions and stronger tests |
 | MVP 0.4 — local SLM adapter | Deferred | Only after deterministic loop is reliable |
 | MVP 0.5 — rehearsal hardening | Deferred | Multi-phone, router, Framework/Fedora, burn-in |
 
 ## Next action
 
-Implement MVP 0.2 using `docs/MVP_0_2_PLAN.md`.
+Add Future Me Quest, make deterministic proposal/result content respond more
+specifically to the winning choices, then repeat the phone-to-screen LAN test.

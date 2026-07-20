@@ -19,6 +19,7 @@ required_paths=(
   "/health"
   "/replay"
   "/api/state"
+  "/api/missions"
   "/qr.svg"
 )
 

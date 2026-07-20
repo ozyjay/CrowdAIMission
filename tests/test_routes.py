@@ -10,7 +10,7 @@ def setup_function():
 def test_static_routes_and_health_respond():
     client = TestClient(app)
 
-    for path in ["/", "/screen", "/staff", "/health", "/replay", "/ping"]:
+    for path in ["/", "/screen", "/staff", "/health", "/replay", "/ping", "/api/missions"]:
         response = client.get(path)
         assert response.status_code == 200
 
@@ -106,8 +106,10 @@ def test_api_state_exposes_public_shape_only():
         "choices",
         "votes",
         "winning_choices",
+        "selections",
         "proposal",
         "checks",
+        "result",
         "fallback_message",
     }
     assert "email" not in str(state).lower()
@@ -160,6 +162,36 @@ def test_staff_controls_select_advance_reset_and_fallback():
     assert reset.status_code == 200
     assert reset.json()["phase"] == "goal_vote"
     assert reset.json()["mode"] == "live"
+
+
+def test_missions_api_returns_enabled_public_summaries():
+    client = TestClient(app)
+
+    response = client.get("/api/missions")
+
+    assert response.status_code == 200
+    missions = response.json()["missions"]
+    assert {mission["id"] for mission in missions} == {"game_studio", "truth_check"}
+    assert all(mission["enabled"] is True for mission in missions)
+
+
+def test_staff_can_clear_votes_and_switch_replay_mode():
+    client = TestClient(app)
+    client.post(
+        "/api/vote",
+        json={"vote_type": "goal", "choice_id": "help_player_escape"},
+    )
+
+    cleared = client.post("/api/staff/clear-votes")
+    assert cleared.status_code == 200
+    assert cleared.json()["votes"] == {}
+
+    replay = client.post("/api/staff/mode", json={"mode": "replay"})
+    assert replay.status_code == 200
+    assert replay.json()["phase"] == "replay"
+
+    invalid = client.post("/api/staff/mode", json={"mode": "uncontrolled"})
+    assert invalid.status_code == 400
 
 
 def test_websocket_receives_initial_public_state():

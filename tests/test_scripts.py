@@ -17,7 +17,7 @@ def test_powershell_scripts_mirror_fixed_ports_and_routes():
     for port in ["3200", "8200", "8600", "8700", "8800"]:
         assert port in check_ports
 
-    for route in ["/", "/screen", "/staff", "/health", "/replay", "/qr.svg"]:
+    for route in ["/", "/screen", "/staff", "/health", "/replay", "/api/missions", "/qr.svg"]:
         assert route in smoke_test
 
     assert "APP_HOST" in start_dev
