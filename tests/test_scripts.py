@@ -41,6 +41,8 @@ def test_linux_hotspot_script_has_safe_demo_defaults():
     assert "802-11-wireless.band bg" in script
     assert "ipv4.method shared" in script
     assert "802-11-wireless-security.key-mgmt wpa-psk" in script
+    assert "od -An -N12 -tx1 /dev/urandom" in script
+    assert "nmcli device wifi show-password" in script
 
 
 def test_linux_hotspot_help_does_not_require_network_manager():
@@ -54,3 +56,4 @@ def test_linux_hotspot_help_does_not_require_network_manager():
     assert result.returncode == 0
     assert "Manage the Crowd AI demo's offline Wi-Fi hotspot" in result.stdout
     assert "HOTSPOT_INTERFACE" in result.stdout
+    assert "./scripts/manage_hotspot.sh qr" in result.stdout

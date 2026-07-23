@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
+export LC_ALL=C
 
 HOTSPOT_NAME="${HOTSPOT_NAME:-CrowdAI-Hotspot}"
 HOTSPOT_SSID="${HOTSPOT_SSID:-CrowdAI}"
@@ -19,13 +20,15 @@ Usage:
   ./scripts/manage_hotspot.sh stop
   ./scripts/manage_hotspot.sh restart [--yes]
   ./scripts/manage_hotspot.sh status
+  ./scripts/manage_hotspot.sh qr
   ./scripts/manage_hotspot.sh help
 
 Actions:
-  start     Create or start the hotspot. Prompts for a password when first created.
+  start     Create or start the hotspot. Generates a password when first created.
   stop      Stop the hotspot without deleting its saved NetworkManager profile.
   restart   Stop and start the hotspot.
   status    Show hotspot, interface, address, and phone URL information.
+  qr        Show Fedora's terminal QR code and password for joining the hotspot.
 
 Options:
   -y, --yes  Allow start to disconnect an existing Wi-Fi connection.
@@ -35,11 +38,12 @@ Optional environment variables:
   HOTSPOT_NAME       NetworkManager profile name (default: CrowdAI-Hotspot)
   HOTSPOT_SSID       Wi-Fi network name (default: CrowdAI)
   HOTSPOT_INTERFACE  Wi-Fi interface; auto-detected when unset
-  HOTSPOT_PASSWORD   WPA password; prompted for when a new profile needs one
+  HOTSPOT_PASSWORD   Optional WPA password override; generated when unset
   APP_PORT           Demo web-app port (default: 3200)
 
-The hotspot uses 2.4 GHz for broad phone compatibility and works without an
-internet connection. Start the web app separately with APP_HOST=0.0.0.0.
+The generated password is saved in the NetworkManager profile and reused after
+a restart. The hotspot uses 2.4 GHz for broad phone compatibility and works
+without internet. Start the web app separately with APP_HOST=0.0.0.0.
 EOF
 }
 
@@ -105,20 +109,19 @@ validate_interface() {
     fail "'${interface}' is not an available Wi-Fi interface."
 }
 
-prompt_for_password() {
-  local first second
+generate_password() {
+  local generated
 
-  if [ ! -t 0 ]; then
-    fail "A password is required. Set HOTSPOT_PASSWORD for non-interactive use."
-  fi
+  command -v od >/dev/null 2>&1 ||
+    fail "od was not found, so a secure hotspot password could not be generated."
 
-  read -r -s -p "Hotspot password (8-63 characters): " first
-  echo
-  read -r -s -p "Confirm hotspot password: " second
-  echo
-
-  [ "${first}" = "${second}" ] || fail "Passwords did not match."
-  HOTSPOT_PASSWORD="${first}"
+  generated="$(
+    od -An -N12 -tx1 /dev/urandom |
+      tr -d '[:space:]'
+  )"
+  [ "${#generated}" -eq 24 ] ||
+    fail "A secure hotspot password could not be generated."
+  printf '%s\n' "${generated}"
 }
 
 validate_password() {
@@ -129,13 +132,21 @@ validate_password() {
 }
 
 profile_needs_password() {
-  local key_management
+  local key_management saved_password
   key_management="$(
     nmcli -g 802-11-wireless-security.key-mgmt \
       connection show "${HOTSPOT_NAME}" 2>/dev/null |
       head -n 1
   )"
-  [ -z "${key_management}" ] || [ "${key_management}" = "--" ]
+  saved_password="$(
+    nmcli --show-secrets -g 802-11-wireless-security.psk \
+      connection show "${HOTSPOT_NAME}" 2>/dev/null |
+      head -n 1
+  )"
+  [ -z "${key_management}" ] ||
+    [ "${key_management}" = "--" ] ||
+    [ -z "${saved_password}" ] ||
+    [ "${saved_password}" = "--" ]
 }
 
 confirm_wifi_disconnect() {
@@ -190,6 +201,18 @@ print_connection_details() {
   fi
 }
 
+show_wifi_qr() {
+  local interface="$1"
+
+  if ! profile_is_active; then
+    fail "The hotspot is stopped. Start it before showing its Wi-Fi QR code."
+  fi
+
+  echo "Scan this Fedora/NetworkManager QR code to join Wi-Fi '${HOTSPOT_SSID}':"
+  echo
+  nmcli device wifi show-password ifname "${interface}"
+}
+
 start_hotspot() {
   local interface="$1"
   local new_profile=false
@@ -206,7 +229,8 @@ start_hotspot() {
   fi
 
   if [ "${needs_password}" = true ] && [ -z "${HOTSPOT_PASSWORD}" ]; then
-    prompt_for_password
+    HOTSPOT_PASSWORD="$(generate_password)"
+    echo "Generated a new password for Wi-Fi '${HOTSPOT_SSID}'."
   fi
 
   if [ "${new_profile}" = true ]; then
@@ -241,6 +265,8 @@ start_hotspot() {
   echo "Offline hotspot started."
   print_connection_details "${interface}"
   echo "Start the demo with: APP_HOST=0.0.0.0 ./scripts/start_dev.sh"
+  echo
+  show_wifi_qr "${interface}"
 }
 
 stop_hotspot() {
@@ -279,7 +305,7 @@ show_status() {
 
 for argument in "$@"; do
   case "${argument}" in
-    start | stop | restart | status | help)
+    start | stop | restart | status | qr | help)
       [ -z "${ACTION}" ] || fail "Specify only one action."
       ACTION="${argument}"
       ;;
@@ -317,5 +343,8 @@ case "${ACTION}" in
     ;;
   status)
     show_status
+    ;;
+  qr)
+    show_wifi_qr "$(find_wifi_interface)"
     ;;
 esac

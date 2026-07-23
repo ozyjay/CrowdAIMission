@@ -67,15 +67,17 @@ the demo network without Ethernet or internet access:
 APP_HOST=0.0.0.0 ./scripts/start_dev.sh
 ```
 
-The first start prompts for a WPA password and saves a NetworkManager profile.
-The hotspot uses 2.4 GHz for broad phone compatibility. Starting it disconnects
-any Wi-Fi network currently using that adapter; the script asks for confirmation
-before doing so.
+The first start generates a strong WPA password and saves it in a NetworkManager
+profile. It then shows Fedora's terminal QR code, which visitors can scan to
+join the Wi-Fi without typing the password. The hotspot uses 2.4 GHz for broad
+phone compatibility. Starting it disconnects any Wi-Fi network currently using
+that adapter; the script asks for confirmation before doing so.
 
 Useful commands:
 
 ```bash
 ./scripts/manage_hotspot.sh status
+./scripts/manage_hotspot.sh qr
 ./scripts/manage_hotspot.sh restart
 ./scripts/manage_hotspot.sh stop
 ```
@@ -89,13 +91,17 @@ HOTSPOT_INTERFACE=wlp1s0 \
 ```
 
 `HOTSPOT_NAME`, `HOTSPOT_SSID`, `HOTSPOT_INTERFACE`, `HOTSPOT_PASSWORD`, and
-`APP_PORT` are supported. Avoid putting `HOTSPOT_PASSWORD` in `.env` or shell
-history; the hidden interactive prompt is preferred.
+`APP_PORT` are supported. Normally, leave `HOTSPOT_PASSWORD` unset and let the
+script generate it. If a fixed override is necessary, avoid putting it in
+`.env` or shell history.
 
 Phones may warn that the network has no internet. Choose to remain connected.
 Disable VPNs and mobile-data auto-switching if a phone cannot open the printed
 URL. If Fedora's firewall blocks the app, allow TCP port `3200` only on the
 hotspot's NetworkManager/firewalld zone rather than disabling the firewall.
+
+The Fedora QR code joins the Wi-Fi only. After joining, visitors open the
+separate phone URL printed by the script, normally `http://10.42.0.1:3200/`.
 
 ### 5. Smoke test
 

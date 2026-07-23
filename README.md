@@ -123,8 +123,10 @@ APP_HOST=0.0.0.0 ./scripts/start_dev.sh
 ```
 
 The hotspot script prints the phone URL. Use `status`, `stop`, or `restart` as
-the first argument to manage it. See `docs/RUNBOOK.md` for configuration and
-rehearsal notes.
+the first argument to manage it. It generates and saves a password on first
+use, then displays Fedora's terminal QR code for joining the Wi-Fi. Run
+`./scripts/manage_hotspot.sh qr` to show it again. See `docs/RUNBOOK.md` for
+configuration and rehearsal notes.
 
 ## Documentation map
 
