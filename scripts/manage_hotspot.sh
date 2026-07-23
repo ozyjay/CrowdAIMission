@@ -7,6 +7,7 @@ HOTSPOT_SSID="${HOTSPOT_SSID:-CrowdAI}"
 HOTSPOT_INTERFACE="${HOTSPOT_INTERFACE:-}"
 HOTSPOT_PASSWORD="${HOTSPOT_PASSWORD:-}"
 APP_PORT="${APP_PORT:-3200}"
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 
 ASSUME_YES=false
 ACTION=""
@@ -28,7 +29,7 @@ Actions:
   stop      Stop the hotspot without deleting its saved NetworkManager profile.
   restart   Stop and start the hotspot.
   status    Show hotspot, interface, address, and phone URL information.
-  qr        Show Fedora's terminal QR code and password for joining the hotspot.
+  qr        Show a terminal QR code and password for joining the hotspot.
 
 Options:
   -y, --yes  Allow start to disconnect an existing Wi-Fi connection.
@@ -62,16 +63,82 @@ require_network_manager() {
 }
 
 profile_exists() {
-  nmcli -g NAME connection show "${HOTSPOT_NAME}" >/dev/null 2>&1
+  preferred_profile_uuid >/dev/null
 }
 
-profile_is_active() {
-  nmcli -g NAME connection show --active 2>/dev/null |
-    grep -Fxq "${HOTSPOT_NAME}"
+profile_uuids() {
+  nmcli -t -f UUID,NAME connection show 2>/dev/null |
+    awk -F: -v name="${HOTSPOT_NAME}" '$2 == name { print $1 }'
+}
+
+active_profile_uuids() {
+  nmcli -t -f UUID,NAME connection show --active 2>/dev/null |
+    awk -F: -v name="${HOTSPOT_NAME}" '$2 == name { print $1 }'
+}
+
+uuid_is_active() {
+  local uuid="$1"
+  nmcli -g UUID connection show --active 2>/dev/null |
+    grep -Fxq "${uuid}"
+}
+
+preferred_profile_uuid() {
+  local uuid timestamp selected_uuid=""
+  local selected_timestamp=-1
+  local -a active_uuids profile_uuid_list
+
+  mapfile -t active_uuids < <(active_profile_uuids)
+  if [ "${#active_uuids[@]}" -gt 0 ]; then
+    printf '%s\n' "${active_uuids[0]}"
+    return
+  fi
+
+  mapfile -t profile_uuid_list < <(profile_uuids)
+  [ "${#profile_uuid_list[@]}" -gt 0 ] || return 1
+
+  for uuid in "${profile_uuid_list[@]}"; do
+    timestamp="$(
+      nmcli -g connection.timestamp connection show uuid "${uuid}" 2>/dev/null |
+        head -n 1
+    )"
+    if [[ ! "${timestamp}" =~ ^[0-9]+$ ]]; then
+      timestamp=0
+    fi
+    if [ "${timestamp}" -gt "${selected_timestamp}" ]; then
+      selected_uuid="${uuid}"
+      selected_timestamp="${timestamp}"
+    fi
+  done
+
+  printf '%s\n' "${selected_uuid}"
+}
+
+normalise_duplicate_profiles() {
+  local selected_uuid uuid archive_name
+  local -a profile_uuid_list
+
+  mapfile -t profile_uuid_list < <(profile_uuids)
+  [ "${#profile_uuid_list[@]}" -gt 0 ] || return 1
+
+  selected_uuid="$(preferred_profile_uuid)"
+  if [ "${#profile_uuid_list[@]}" -gt 1 ]; then
+    echo "Found ${#profile_uuid_list[@]} hotspot profiles named '${HOTSPOT_NAME}'." >&2
+    for uuid in "${profile_uuid_list[@]}"; do
+      if [ "${uuid}" = "${selected_uuid}" ]; then
+        continue
+      fi
+      archive_name="${HOTSPOT_NAME}-duplicate-${uuid:0:8}"
+      nmcli connection modify uuid "${uuid}" connection.id "${archive_name}"
+      echo "Preserved duplicate ${uuid} as '${archive_name}'." >&2
+    done
+    echo "Using hotspot profile UUID ${selected_uuid}." >&2
+  fi
+
+  printf '%s\n' "${selected_uuid}"
 }
 
 find_wifi_interface() {
-  local interface profile_interface
+  local interface profile_interface profile_uuid
 
   if [ -n "${HOTSPOT_INTERFACE}" ]; then
     printf '%s\n' "${HOTSPOT_INTERFACE}"
@@ -79,8 +146,9 @@ find_wifi_interface() {
   fi
 
   if profile_exists; then
+    profile_uuid="$(preferred_profile_uuid)"
     profile_interface="$(
-      nmcli -g connection.interface-name connection show "${HOTSPOT_NAME}" 2>/dev/null |
+      nmcli -g connection.interface-name connection show uuid "${profile_uuid}" 2>/dev/null |
         head -n 1
     )"
     if [ -n "${profile_interface}" ] && [ "${profile_interface}" != "--" ]; then
@@ -132,15 +200,16 @@ validate_password() {
 }
 
 profile_needs_password() {
+  local uuid="$1"
   local key_management saved_password
   key_management="$(
     nmcli -g 802-11-wireless-security.key-mgmt \
-      connection show "${HOTSPOT_NAME}" 2>/dev/null |
+      connection show uuid "${uuid}" 2>/dev/null |
       head -n 1
   )"
   saved_password="$(
     nmcli --show-secrets -g 802-11-wireless-security.psk \
-      connection show "${HOTSPOT_NAME}" 2>/dev/null |
+      connection show uuid "${uuid}" 2>/dev/null |
       head -n 1
   )"
   [ -z "${key_management}" ] ||
@@ -201,30 +270,86 @@ print_connection_details() {
   fi
 }
 
+qr_python() {
+  local candidate
+  local -a candidates
+
+  if [ -n "${WIFI_QR_PYTHON:-}" ]; then
+    candidates=("${WIFI_QR_PYTHON}")
+  else
+    candidates=("${SCRIPT_DIR}/../.venv/bin/python3" "python3")
+  fi
+
+  for candidate in "${candidates[@]}"; do
+    if { [ -x "${candidate}" ] || command -v "${candidate}" >/dev/null 2>&1; } &&
+      "${candidate}" -c "import qrcode" >/dev/null 2>&1; then
+      printf '%s\n' "${candidate}"
+      return
+    fi
+  done
+  return 1
+}
+
 show_wifi_qr() {
   local interface="$1"
+  local profile_uuid password python_bin ssid
 
-  if ! profile_is_active; then
+  profile_uuid="$(preferred_profile_uuid)" ||
+    fail "Hotspot profile '${HOTSPOT_NAME}' does not exist."
+  if ! uuid_is_active "${profile_uuid}"; then
     fail "The hotspot is stopped. Start it before showing its Wi-Fi QR code."
   fi
 
-  echo "Scan this Fedora/NetworkManager QR code to join Wi-Fi '${HOTSPOT_SSID}':"
+  ssid="$(
+    nmcli -g 802-11-wireless.ssid connection show uuid "${profile_uuid}" |
+      head -n 1
+  )"
+  password="$(
+    nmcli --show-secrets -g 802-11-wireless-security.psk \
+      connection show uuid "${profile_uuid}" |
+      head -n 1
+  )"
+  [ -n "${password}" ] && [ "${password}" != "--" ] ||
+    fail "NetworkManager did not provide the hotspot password."
+
+  echo "Scan this QR code to join Wi-Fi '${ssid}':"
   echo
-  nmcli device wifi show-password ifname "${interface}"
+  echo "SSID:     ${ssid}"
+  echo "Security: WPA"
+  echo "Password: ${password}"
+  echo
+
+  if python_bin="$(qr_python)"; then
+    printf '%s\n%s\n' "${ssid}" "${password}" |
+      "${python_bin}" "${SCRIPT_DIR}/render_wifi_qr.py"
+  else
+    echo "QR rendering unavailable. Install the project requirements, then rerun:"
+    echo "  ./scripts/manage_hotspot.sh qr"
+    echo "You can still join Wi-Fi by entering the credentials above."
+  fi
+
+  echo
+  echo "After joining, open the Phone URL shown by the status command."
+  echo "Interface: ${interface}"
 }
 
 start_hotspot() {
   local interface="$1"
+  local profile_uuid=""
   local new_profile=false
   local needs_password=false
 
   validate_interface "${interface}"
   confirm_wifi_disconnect "${interface}"
 
-  if ! profile_exists; then
+  if profile_exists; then
+    profile_uuid="$(normalise_duplicate_profiles)"
+  else
     new_profile=true
     needs_password=true
-  elif profile_needs_password; then
+  fi
+
+  if [ "${new_profile}" = false ] && profile_needs_password "${profile_uuid}"; then
     needs_password=true
   fi
 
@@ -240,9 +365,11 @@ start_hotspot() {
       ifname "${interface}" \
       con-name "${HOTSPOT_NAME}" \
       ssid "${HOTSPOT_SSID}" >/dev/null
+    profile_uuid="$(preferred_profile_uuid)" ||
+      fail "NetworkManager created the profile but its UUID could not be found."
   fi
 
-  nmcli connection modify "${HOTSPOT_NAME}" \
+  nmcli connection modify uuid "${profile_uuid}" \
     connection.interface-name "${interface}" \
     connection.autoconnect no \
     802-11-wireless.ssid "${HOTSPOT_SSID}" \
@@ -255,12 +382,12 @@ start_hotspot() {
     [ "${needs_password}" = true ] ||
     [ -n "${HOTSPOT_PASSWORD}" ]; then
     validate_password
-    nmcli connection modify "${HOTSPOT_NAME}" \
+    nmcli connection modify uuid "${profile_uuid}" \
       802-11-wireless-security.key-mgmt wpa-psk \
       802-11-wireless-security.psk "${HOTSPOT_PASSWORD}"
   fi
 
-  nmcli connection up "${HOTSPOT_NAME}" ifname "${interface}"
+  nmcli connection up uuid "${profile_uuid}" ifname "${interface}"
   echo
   echo "Offline hotspot started."
   print_connection_details "${interface}"
@@ -270,13 +397,24 @@ start_hotspot() {
 }
 
 stop_hotspot() {
-  if ! profile_exists; then
+  local uuid
+  local stopped=0
+  local -a profile_uuid_list
+
+  mapfile -t profile_uuid_list < <(profile_uuids)
+  if [ "${#profile_uuid_list[@]}" -eq 0 ]; then
     echo "Hotspot profile '${HOTSPOT_NAME}' does not exist."
     return
   fi
 
-  if profile_is_active; then
-    nmcli connection down "${HOTSPOT_NAME}"
+  for uuid in "${profile_uuid_list[@]}"; do
+    if uuid_is_active "${uuid}"; then
+      nmcli connection down uuid "${uuid}"
+      stopped=$((stopped + 1))
+    fi
+  done
+
+  if [ "${stopped}" -gt 0 ]; then
     echo "Hotspot stopped. Its saved profile was kept."
   else
     echo "Hotspot is already stopped."
@@ -284,16 +422,16 @@ stop_hotspot() {
 }
 
 show_status() {
-  local interface
+  local interface profile_uuid
 
-  if ! profile_exists; then
+  profile_uuid="$(preferred_profile_uuid)" || {
     echo "Hotspot profile '${HOTSPOT_NAME}' has not been created."
     echo "Run: ./scripts/manage_hotspot.sh start"
     return
-  fi
+  }
 
   interface="$(find_wifi_interface)"
-  if profile_is_active; then
+  if uuid_is_active "${profile_uuid}"; then
     echo "Status: active"
     print_connection_details "${interface}"
   else

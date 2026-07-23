@@ -68,7 +68,7 @@ APP_HOST=0.0.0.0 ./scripts/start_dev.sh
 ```
 
 The first start generates a strong WPA password and saves it in a NetworkManager
-profile. It then shows Fedora's terminal QR code, which visitors can scan to
+profile. It then shows a terminal QR code, which visitors can scan to
 join the Wi-Fi without typing the password. The hotspot uses 2.4 GHz for broad
 phone compatibility. Starting it disconnects any Wi-Fi network currently using
 that adapter; the script asks for confirmation before doing so.
@@ -100,8 +100,13 @@ Disable VPNs and mobile-data auto-switching if a phone cannot open the printed
 URL. If Fedora's firewall blocks the app, allow TCP port `3200` only on the
 hotspot's NetworkManager/firewalld zone rather than disabling the firewall.
 
-The Fedora QR code joins the Wi-Fi only. After joining, visitors open the
+The Wi-Fi QR code joins the hotspot only. After joining, visitors open the
 separate phone URL printed by the script, normally `http://10.42.0.1:3200/`.
+
+If interrupted starts have created more than one `CrowdAI-Hotspot` profile,
+the next `start` keeps the active or most recently used profile and renames the
+others with a `-duplicate-<uuid>` suffix. This preserves their settings while
+removing NetworkManager's ambiguous-name warnings.
 
 ### 5. Smoke test
 
