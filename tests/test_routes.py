@@ -23,7 +23,7 @@ def test_static_routes_and_health_respond():
         "status": "healthy",
         "mode": "live",
         "app_port": 3200,
-        "missions_loaded": 2,
+        "missions_loaded": 3,
         "model_enabled": False,
     }
 
@@ -171,7 +171,11 @@ def test_missions_api_returns_enabled_public_summaries():
 
     assert response.status_code == 200
     missions = response.json()["missions"]
-    assert {mission["id"] for mission in missions} == {"game_studio", "truth_check"}
+    assert {mission["id"] for mission in missions} == {
+        "game_studio",
+        "truth_check",
+        "future_me",
+    }
     assert all(mission["enabled"] is True for mission in missions)
 
 
@@ -200,7 +204,7 @@ def test_websocket_receives_initial_public_state():
     with client.websocket_connect("/ws") as websocket:
         initial = websocket.receive_json()
         assert initial["phase"] == "goal_vote"
-        assert initial["mission_id"] in {"game_studio", "truth_check"}
+        assert initial["mission_id"] in {"game_studio", "truth_check", "future_me"}
         assert initial["choices"]
 
 

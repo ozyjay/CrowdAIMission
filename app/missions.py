@@ -173,4 +173,80 @@ MISSIONS: dict[str, Mission] = {
         staff_script="The crowd can flag uncertainty, but staff remain the source for real facts.",
         test_cases=("unsupported_claim_flagged", "invented_fact_repaired_to_question"),
     ),
+    "future_me": Mission(
+        id="future_me",
+        title="Future Me Quest",
+        hook=(
+            "Can a local AI turn interests into better Open Day questions "
+            "without overclaiming?"
+        ),
+        audience_pull="Prospective students and highschoolers exploring pathways",
+        goals=(
+            Choice("find_better_questions", "Find better Open Day questions"),
+            Choice("connect_interests", "Connect interests to IT projects"),
+            Choice("compare_pathways", "Compare possible pathways"),
+            Choice("find_hands_on_activity", "Find something hands-on to try"),
+            Choice("explore_helpful_technology", "Explore technology that helps people"),
+        ),
+        rules=(
+            Choice("no_perfect_career", "Do not predict one perfect career"),
+            Choice("no_invented_details", "Do not invent course details"),
+            Choice("options_not_guarantees", "Give options, not guarantees"),
+            Choice("ask_staff_for_details", "Ask staff for current details"),
+            Choice("questions_not_predictions", "Suggest questions, not predictions"),
+        ),
+        check_options=(
+            Choice("useful_question", "Useful question"),
+            Choice("too_vague", "Too vague"),
+            Choice("too_confident", "Too confident"),
+            Choice("needs_staff", "Needs staff"),
+            Choice("make_hands_on", "Make it more hands-on"),
+        ),
+        repair_options=(
+            Choice("offer_options", "Offer several options"),
+            Choice("turn_into_question", "Turn advice into a question"),
+            Choice("ask_staff", "Ask staff for current details"),
+            Choice("add_hands_on_step", "Add a hands-on next step"),
+            Choice("safe_fallback", "Use the prepared question"),
+        ),
+        allowed_actions=("build_open_day_question", "compare_options", "fallback"),
+        allowed_assets=("question_card", "pathway_options", "fallback_card"),
+        proposal=Proposal(
+            action="build_open_day_question",
+            asset_id="question_card",
+            caption=(
+                "Ask staff: What kinds of hands-on projects combine software, "
+                "AI, games, data, cybersecurity, or human-centred design, and "
+                "which options could I explore today?"
+            ),
+            source_ids=(),
+            requires_review=False,
+        ),
+        checks={
+            "intent": "pass",
+            "schema": "pass",
+            "rules": "pass",
+            "evidence": "not_required",
+            "safety": "pass",
+        },
+        safe_failure_examples=(
+            "AI guarantees a particular career or job.",
+            "AI tells the visitor what they should definitely do.",
+            "AI invents a course feature.",
+            "AI gives vague encouragement without a useful next question.",
+        ),
+        fallback_response=(
+            "Prepared question: What kinds of projects do IT students build, "
+            "and how do AI, software, data, cybersecurity, or games fit into them?"
+        ),
+        staff_script=(
+            "The crowd turns vague AI advice into better questions a visitor "
+            "can ask a real person at Open Day."
+        ),
+        test_cases=(
+            "career_prediction_repaired_to_question",
+            "invented_course_detail_referred_to_staff",
+            "vague_advice_repaired_to_hands_on_step",
+        ),
+    ),
 }

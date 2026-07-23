@@ -2,7 +2,7 @@ from app.missions import CHECK_LABELS, MISSIONS
 
 
 def test_mvp_missions_have_required_demo_content():
-    assert set(MISSIONS) == {"game_studio", "truth_check"}
+    assert set(MISSIONS) == {"game_studio", "truth_check", "future_me"}
 
     for mission in MISSIONS.values():
         assert mission.title
@@ -22,3 +22,15 @@ def test_truth_check_proposal_marks_evidence_as_warning():
 
     assert mission.proposal.requires_review is True
     assert mission.checks["evidence"] == "warn"
+
+
+def test_future_me_proposal_asks_questions_without_career_guarantees():
+    mission = MISSIONS["future_me"]
+    proposal = mission.proposal.caption.lower()
+
+    assert "ask staff" in proposal
+    assert "?" in proposal
+    assert "definitely" not in proposal
+    assert "guarantee" not in proposal
+    assert mission.checks["evidence"] == "not_required"
+    assert "question" in mission.fallback_response.lower()

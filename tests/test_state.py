@@ -158,3 +158,29 @@ def test_select_mission_resets_state_to_selected_mission():
     assert public["mission_title"] == "Deepfake Detective / Truth Check"
     assert public["phase"] == "goal_vote"
     assert public["votes"] == {}
+
+
+def test_future_me_completes_a_full_deterministic_round():
+    state = DemoState()
+    state.select_mission("future_me")
+
+    state.submit_vote("goal", "connect_interests")
+    state.advance()
+    state.submit_vote("rule", "options_not_guarantees")
+    state.advance()
+
+    proposal = state.public_state()
+    assert proposal["phase"] == "proposal"
+    assert proposal["proposal"]["action"] == "build_open_day_question"
+    assert proposal["proposal"]["goal"]["label"] == "Connect interests to IT projects"
+    assert proposal["proposal"]["rule"]["label"] == "Give options, not guarantees"
+    assert proposal["checks"]["rules"] == "pass"
+
+    state.advance()
+    state.submit_vote("check", "useful_question")
+    state.advance()
+
+    result = state.public_state()
+    assert result["phase"] == "result"
+    assert result["selections"]["decision"]["label"] == "Useful question"
+    assert "Useful question" in result["result"]["message"]

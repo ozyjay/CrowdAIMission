@@ -1,5 +1,17 @@
 # Changelog
 
+## 2026-07-24
+
+- Added the deterministic Future Me Quest mission with curated goals, rules,
+  crowd decisions, safe fallback copy, and staff controls.
+- Added full-round Future Me Quest tests and checks against overconfident career
+  recommendations.
+- Recorded the successful Framework Desktop / Fedora hotspot and iPhone
+  phone-to-screen round-loop test.
+- Added hotspot management, generated Wi-Fi credentials, join QR rendering,
+  duplicate NetworkManager profile recovery, and command-line environment
+  precedence fixes.
+
 ## 2026-07-20
 
 - Added the missions API and contract-compatible staff mission route.
