@@ -1,11 +1,34 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+CALLER_APP_HOST_SET="${APP_HOST+x}"
+CALLER_APP_HOST="${APP_HOST-}"
+CALLER_APP_PORT_SET="${APP_PORT+x}"
+CALLER_APP_PORT="${APP_PORT-}"
+CALLER_APP_RELOAD_SET="${APP_RELOAD+x}"
+CALLER_APP_RELOAD="${APP_RELOAD-}"
+CALLER_PYTHON_BIN_SET="${PYTHON_BIN+x}"
+CALLER_PYTHON_BIN="${PYTHON_BIN-}"
+
 if [ -f .env ]; then
   set -a
   # shellcheck disable=SC1091
   source .env
   set +a
+fi
+
+# Explicit command-line environment values take precedence over .env.
+if [ "${CALLER_APP_HOST_SET}" = "x" ]; then
+  APP_HOST="${CALLER_APP_HOST}"
+fi
+if [ "${CALLER_APP_PORT_SET}" = "x" ]; then
+  APP_PORT="${CALLER_APP_PORT}"
+fi
+if [ "${CALLER_APP_RELOAD_SET}" = "x" ]; then
+  APP_RELOAD="${CALLER_APP_RELOAD}"
+fi
+if [ "${CALLER_PYTHON_BIN_SET}" = "x" ]; then
+  PYTHON_BIN="${CALLER_PYTHON_BIN}"
 fi
 
 APP_HOST="${APP_HOST:-127.0.0.1}"

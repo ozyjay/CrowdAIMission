@@ -1,3 +1,4 @@
+import os
 import subprocess
 from pathlib import Path
 
@@ -59,3 +60,37 @@ def test_linux_hotspot_help_does_not_require_network_manager():
     assert "Manage the Crowd AI demo's offline Wi-Fi hotspot" in result.stdout
     assert "HOTSPOT_INTERFACE" in result.stdout
     assert "./scripts/manage_hotspot.sh qr" in result.stdout
+
+
+def test_start_dev_command_environment_overrides_dotenv(tmp_path):
+    (tmp_path / ".env").write_text(
+        "APP_HOST=127.0.0.1\n"
+        "APP_PORT=9999\n"
+        "APP_RELOAD=true\n"
+    )
+    fake_python = tmp_path / "python3"
+    fake_python.write_text("#!/usr/bin/env bash\nexit 0\n")
+    fake_python.chmod(0o755)
+
+    environment = os.environ.copy()
+    environment.update(
+        {
+            "APP_HOST": "0.0.0.0",
+            "APP_PORT": "3200",
+            "APP_RELOAD": "false",
+            "PYTHON_BIN": str(fake_python),
+        }
+    )
+    result = subprocess.run(
+        ["bash", str(SCRIPTS_DIR / "start_dev.sh")],
+        cwd=tmp_path,
+        env=environment,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode == 1
+    assert "Laptop URL: http://127.0.0.1:3200/" in result.stdout
+    assert "Phone URL:" in result.stdout
+    assert "unavailable while APP_HOST" not in result.stdout
