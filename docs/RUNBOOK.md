@@ -57,6 +57,46 @@ Phone:
 Use the Phone URL printed by the start script.
 ```
 
+### Offline Framework Desktop hotspot
+
+On Fedora or another Linux system using NetworkManager, the Desktop can host
+the demo network without Ethernet or internet access:
+
+```bash
+./scripts/manage_hotspot.sh start
+APP_HOST=0.0.0.0 ./scripts/start_dev.sh
+```
+
+The first start prompts for a WPA password and saves a NetworkManager profile.
+The hotspot uses 2.4 GHz for broad phone compatibility. Starting it disconnects
+any Wi-Fi network currently using that adapter; the script asks for confirmation
+before doing so.
+
+Useful commands:
+
+```bash
+./scripts/manage_hotspot.sh status
+./scripts/manage_hotspot.sh restart
+./scripts/manage_hotspot.sh stop
+```
+
+Configuration can be supplied with environment variables:
+
+```bash
+HOTSPOT_SSID=CrowdAI \
+HOTSPOT_INTERFACE=wlp1s0 \
+./scripts/manage_hotspot.sh start
+```
+
+`HOTSPOT_NAME`, `HOTSPOT_SSID`, `HOTSPOT_INTERFACE`, `HOTSPOT_PASSWORD`, and
+`APP_PORT` are supported. Avoid putting `HOTSPOT_PASSWORD` in `.env` or shell
+history; the hidden interactive prompt is preferred.
+
+Phones may warn that the network has no internet. Choose to remain connected.
+Disable VPNs and mobile-data auto-switching if a phone cannot open the printed
+URL. If Fedora's firewall blocks the app, allow TCP port `3200` only on the
+hotspot's NetworkManager/firewalld zone rather than disabling the firewall.
+
 ### 5. Smoke test
 
 In another terminal:

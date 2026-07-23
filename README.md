@@ -114,6 +114,18 @@ APP_HOST=0.0.0.0 ./scripts/start_dev.sh
 
 The script prints the current `Phone URL`. Open that URL on the phone, or scan the QR code on `/screen` or `/staff`. When `APP_HOST=0.0.0.0`, the QR code rewrites localhost to the laptop LAN address so phones do not try to open `localhost`. Do not hardcode `PUBLIC_DEMO_URL` for normal local demos.
 
+On a Linux host using NetworkManager, the Framework Desktop can provide an
+offline 2.4 GHz hotspot without Ethernet:
+
+```bash
+./scripts/manage_hotspot.sh start
+APP_HOST=0.0.0.0 ./scripts/start_dev.sh
+```
+
+The hotspot script prints the phone URL. Use `status`, `stop`, or `restart` as
+the first argument to manage it. See `docs/RUNBOOK.md` for configuration and
+rehearsal notes.
+
 ## Documentation map
 
 | File | Purpose |
